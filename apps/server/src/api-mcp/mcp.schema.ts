@@ -49,7 +49,8 @@ export const EVENT_WRITABLE_FIELDS = {
   note: { type: 'string', description: 'Free-text note for production notes or references' },
   colour: {
     type: 'string',
-    description: 'Hex colour (#RRGGBB) for visual grouping — ask the user what colour convention they use',
+    description:
+      'Hex colour (#RRGGBB) for visual grouping — ask the user what colour convention they use, and prefer the standard Ontime palette from ontime://style-guide so colours match the editor swatches',
   },
   skip: { type: 'boolean', description: 'If true, event is skipped during playback' },
   flag: {
@@ -199,6 +200,8 @@ When playback is not \`stop\`, mutations to the loaded rundown affect the live r
 
 ## Available resources
 - \`ontime://schema\` — this document
+- \`ontime://style-guide\` — rundown design best practices: grouping, colour palette, cue naming, custom field usage. Read before creating or restyling a rundown.
+- \`ontime://views\` — Ontime's role-specific views, URL parameters, URL presets, and custom views. Read when recommending how a team member should follow or edit the show.
 - \`ontime://rundown/current\` — the currently loaded rundown (JSON)
 - \`ontime://rundowns\` — all rundowns in the project (JSON)
 - \`ontime://project/info\` — project metadata (JSON)
@@ -233,6 +236,16 @@ Main site: https://docs.getontime.no
 - HTTP Integration: https://docs.getontime.no/api/http/
 - OSC Integration: https://docs.getontime.no/api/osc/
 - Make custom views: https://docs.getontime.no/features/custom-views/
+
+## Views
+- Configuring views: https://docs.getontime.no/quick-tips/configuring-views/
+- Operator view: https://docs.getontime.no/interface/production/operator/
+- Cuesheet: https://docs.getontime.no/interface/production/cuesheet/
+- Render views in third-party apps: https://docs.getontime.no/quick-tips/render-elsewhere/
+
+## Quick tips
+- Managing delays: https://docs.getontime.no/quick-tips/managing-delays/
+- Smart time entry: https://docs.getontime.no/quick-tips/smart-time-entry/
 
 ## Helpful references
 - Ontime Cloud: https://docs.getontime.no/ontime-cloud/

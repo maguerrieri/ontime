@@ -186,7 +186,11 @@ export const TOOL_DEFINITIONS = [
         ids: { type: 'array', items: { type: 'string' }, description: 'Existing top-level entry IDs to group' },
         title: { type: 'string', description: 'Group title shown in the rundown and views' },
         note: { type: 'string', description: 'Free-text group note for production notes or references' },
-        colour: { type: 'string', description: 'Hex colour (#RRGGBB) for the group' },
+        colour: {
+          type: 'string',
+          description:
+            'Hex colour (#RRGGBB) for the group — prefer the standard Ontime palette from ontime://style-guide',
+        },
         custom: {
           type: 'object',
           additionalProperties: { type: 'string' },
@@ -395,7 +399,8 @@ export const TOOL_DEFINITIONS = [
         },
         colour: {
           type: 'string',
-          description: 'Hex colour (#RRGGBB) used to visually identify this column in the cuesheet.',
+          description:
+            'Hex colour (#RRGGBB) used to visually identify this column in the cuesheet — for department fields, match the department colour convention (see ontime://style-guide).',
         },
       },
     },
