@@ -18,6 +18,9 @@ Conventions for tidy, scannable rundowns. Read before creating or restyling a ru
 - Set \`targetDuration\` on groups so operators can track time to block completion.
 - Use \`milestone\` for non-timed markers (doors open, broadcast start), not zero-duration events.
 - Use \`delay\` only to model schedule drift, never as padding.
+- Schedule changeovers and buffers as real events (grey; orange when technical), not invisible gaps — 5–10 min between major segments stops one overrun cascading through the day.
+- Model contingency segments as \`skip: true\` events: visible in the rundown, excluded from playback, one edit to activate.
+- Before show day, duplicate the rundown for rehearsal so the show copy stays clean.
 
 ## Colours
 
@@ -38,7 +41,7 @@ Prefer Ontime's default palette — the editor's swatches — so colours look na
 
 ## Cues and titles
 
-- Cues follow ONE convention per rundown: numeric (\`1, 2, 3\` or \`10, 20, 30\`, leaving room for insertions), semantic (\`Preset\`, \`Key 1\`, \`Lunch\`), or a deliberate mix. Match what the rundown already uses; ask if nothing is established.
+- Cues follow ONE convention per rundown: numeric (\`1, 2, 3\` or \`10, 20, 30\`, leaving room for insertions), semantic (\`Preset\`, \`Key 1\`, \`Lunch\`), or a deliberate mix. Dense technical shows often prefix by department (\`LX1\`, \`SND2\`, \`VID3\`). Match what the rundown already uses; ask if nothing is established.
 - Cues are automation handles — external systems (Companion, OSC/HTTP) trigger events by cue name. Keep them unique and stable; warn before renaming cues on an existing show.
 - Title = what happens on stage, under ~50 characters. Department/tech data goes in custom fields; \`note\` is for free-text human context.
 
@@ -47,19 +50,21 @@ Prefer Ontime's default palette — the editor's swatches — so colours look na
 - Structured per-department data (camera, graphics, audio, speaker) belongs in custom fields — one per department, coloured to match. This powers the cuesheet and operator views.
 - Reuse existing fields; never create near-duplicates (\`Cam\`, \`camera\`, \`Cameras\`).
 - Data repeated in titles or notes ("CAM 2") is a sign it belongs in a custom field.
+- Write values to be scannable mid-show: "CAM 2 close-up", not sentences.
 
 ## Timing
 
 - \`linkStart\` events inside a block so schedule edits propagate.
 - \`flag\` sparingly — it marks critical moments and dilutes with overuse.
-- \`timeWarning\`/\`timeDanger\` proportional to segment length.
+- Set \`timeWarning\` where a moderator would signal the speaker to wrap (commonly 5 min); \`timeDanger\` for the final push (e.g. 1 min). Scale both down for short items.
+- Hard out? Backtime: build the closing items from the end with \`timeEnd\` + \`duration\` (Ontime calculates \`timeStart\`), protect their ends with \`timeStrategy: lock-end\`, and use \`countToEnd\` for true curfew items.
 
 After tidying, read \`ontime://views\` and suggest views that use the new structure.
 `;
 
 export const ONTIME_VIEWS_MARKDOWN = `# Ontime views and sharing guide
 
-Ontime renders the rundown into role-specific views at \`http://<host>:<port>/<view>\`. Recommend the right view when the user mentions a role, device, or sharing need. The agent cannot create views or presets — give exact URLs and point to the editor settings.
+Ontime renders the rundown into role-specific views at \`http://<host>:<port>/<view>\`. Recommend the right view when the user mentions a role, device, or sharing need. Prefer sharing live view links over exporting static documents — everyone sees the current version, ending the conflicting-copies problem of circulated spreadsheets. The agent cannot create views or presets — give exact URLs and point to the editor settings.
 
 | View | Path | For |
 | --- | --- | --- |

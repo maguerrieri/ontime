@@ -176,6 +176,7 @@ Schedule integrity:
 - Events with \`duration\` of 0 or negative
 - Events with \`gap < 0\`: overlaps the previous timed event and is a conflict
 - Large unexplained positive gaps between consecutive timed events (> 30 min): check whether these are intentional
+- Long segments scheduled back-to-back with no changeover or buffer between them: one overrun will cascade — suggest a buffer event
 - Events where \`timeEnd < timeStart\`: these cross midnight; confirm this is intentional
 - Events whose \`timeStart\` is the same as or earlier than the previous playable event's \`timeStart\`: Ontime schedules these on the next day; confirm this is intentional
 
@@ -251,6 +252,7 @@ Steps:
 Audit for:
 - Colour consistency: entries coloured outside a discernible convention, missing colours on key segments, red/orange used for normal content (the style guide reserves them for attention items and changeovers), or group/children colours that ignore the dark/light tone pairing. Prefer the default Ontime palette.
 - Grouping: long runs (roughly 4+) of related consecutive top-level events that would read better as a named group; groups missing \`targetDuration\`.
+- Buffers: long segments back-to-back with no changeover event between them; propose short buffer events so one overrun cannot cascade.
 - Cue naming: mixed conventions (numeric vs semantic) without apparent intent, duplicate cues, or gaps that suggest mistakes. Remember cues are automation handles — renaming them can break external triggers, so flag renames explicitly.
 - Data in the wrong place: structured department data buried in titles or notes (e.g. "CAM 2", "GFX: lower third") that belongs in a custom field; overlong titles (over ~50 chars).
 - Entry types: zero-duration events that should be milestones; milestones that carry timing expectations and should be events.
