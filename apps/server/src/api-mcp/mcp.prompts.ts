@@ -120,7 +120,7 @@ Flags (flag):
 Structure and colours:
 - Read the ontime://style-guide resource before deciding on structure or colours.
 - Propose a group per agenda section (morning block, keynotes, breaks) rather than a flat list — in ontime_batch_create_entries this is just a group entry with \`children\`.
-- Ask the user what colour convention they use; if they have none, propose one from the standard Ontime palette in the style guide (colour groups rather than each child). Colours are hex strings: \`#RRGGBB\`.
+- Ask the user what colour convention they use; if they have none, propose one from the default Ontime palette in the style guide: calm hues for normal content, red only for attention items, orange for changeovers, dark tone on a group with the light tone of the same hue on its children. Colours are hex strings: \`#RRGGBB\`.
 
 Custom fields (custom):
 - Call ontime_get_custom_fields for the project's field keys (cuesheet-style columns such as camera, graphics, speaker).
@@ -249,7 +249,7 @@ Steps:
 4. Call ontime_get_timer_state. If playback is not \`stop\` and the target is the loaded rundown, explain that MCP edits affect the live rundown and ask the user to confirm before changing it.
 
 Audit for:
-- Colour consistency: entries coloured outside a discernible convention, missing colours on key segments, or children individually coloured when colouring the group would be cleaner. Prefer the standard Ontime palette from the style guide.
+- Colour consistency: entries coloured outside a discernible convention, missing colours on key segments, red/orange used for normal content (the style guide reserves them for attention items and changeovers), or group/children colours that ignore the dark/light tone pairing. Prefer the default Ontime palette.
 - Grouping: long runs (roughly 4+) of related consecutive top-level events that would read better as a named group; groups missing \`targetDuration\`.
 - Cue naming: mixed conventions (numeric vs semantic) without apparent intent, duplicate cues, or gaps that suggest mistakes. Remember cues are automation handles — renaming them can break external triggers, so flag renames explicitly.
 - Data in the wrong place: structured department data buried in titles or notes (e.g. "CAM 2", "GFX: lower third") that belongs in a custom field; overlong titles (over ~50 chars).
@@ -257,7 +257,7 @@ Audit for:
 - Flags: \`flag: true\` on many events dilutes its meaning — critical markers only.
 
 Then:
-5. Present the findings as a concrete proposal (what changes, on which entries, and why) and WAIT for the user to approve before mutating anything.
+5. Present the findings as a short, scannable proposal (what changes, on which entries, and why) and WAIT for the user to approve before mutating anything. Be concise — a tight list beats prose.
 6. Apply approved changes with the cheapest calls: ontime_group_entries to group existing entries, ontime_batch_update_entries when several entries get the same values (e.g. recolouring), ontime_update_entry for per-entry changes, ontime_create_custom_field (after confirming the label) when moving data into a new field.
 7. Finish by reading ontime://views and suggesting views that put the improved structure to work — e.g. an operator view subscribed to a department custom field, or a cuesheet for cross-department editing.`,
     );

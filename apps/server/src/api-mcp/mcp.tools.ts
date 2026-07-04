@@ -189,7 +189,7 @@ export const TOOL_DEFINITIONS = [
         colour: {
           type: 'string',
           description:
-            'Hex colour (#RRGGBB) for the group — prefer the standard Ontime palette from ontime://style-guide',
+            'Hex colour (#RRGGBB) for the group — prefer the default Ontime palette from ontime://style-guide',
         },
         custom: {
           type: 'object',

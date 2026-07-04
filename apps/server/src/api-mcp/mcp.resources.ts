@@ -51,7 +51,7 @@ export const RESOURCE_DEFINITIONS: ListResourcesResult['resources'] = [
     name: 'ontime-style-guide',
     title: 'Rundown style guide',
     description:
-      'Best practices for tidy, easy-to-read rundowns: grouping, colour conventions and the standard Ontime palette, cue naming, custom fields vs notes, timing hygiene. Read before creating or restyling a rundown.',
+      'Best practices for tidy, easy-to-read rundowns: grouping, colour conventions and the default Ontime palette, cue naming, custom fields vs notes, timing hygiene. Read before creating or restyling a rundown.',
     mimeType: 'text/markdown',
   },
   {

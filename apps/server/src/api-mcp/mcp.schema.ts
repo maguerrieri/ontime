@@ -50,7 +50,7 @@ export const EVENT_WRITABLE_FIELDS = {
   colour: {
     type: 'string',
     description:
-      'Hex colour (#RRGGBB) for visual grouping — ask the user what colour convention they use, and prefer the standard Ontime palette from ontime://style-guide so colours match the editor swatches',
+      'Hex colour (#RRGGBB) for visual grouping — ask the user what colour convention they use, and prefer the default Ontime palette from ontime://style-guide so colours match the editor swatches',
   },
   skip: { type: 'boolean', description: 'If true, event is skipped during playback' },
   flag: {
