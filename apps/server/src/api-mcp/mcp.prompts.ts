@@ -124,8 +124,8 @@ Structure and colours:
 
 Custom fields (custom):
 - Call ontime_get_custom_fields for the project's field keys (cuesheet-style columns such as camera, graphics, speaker).
-- Store values per entry at \`custom: { <fieldKey>: <value> }\` — only use keys that exist in the project.
-- If the user's requested field is ambiguous, show the existing field list before choosing a key, so you avoid duplicate concepts such as \`Cam\`, \`camera\`, and \`Cameras\`.
+- Store values per entry at \`custom: { <fieldKey>: <value> }\` — keys are case-sensitive.
+- Reuse an existing field when it covers the concept (avoid duplicates such as \`Cam\`, \`camera\`, \`Cameras\`); when the agenda carries structured data with no matching field (speakers, locations), create it with ontime_create_custom_field and use the returned key — no confirmation needed.
 
 After creating the rundown, read ontime://views and suggest how the team can follow it — e.g. a timer view for speakers, a backstage view for crew, or an operator view subscribed to a department custom field.
 
@@ -258,7 +258,7 @@ Audit for:
 
 Then:
 5. Present the findings as a short, scannable proposal (what changes, on which entries, and why) and WAIT for the user to approve before mutating anything. Be concise — a tight list beats prose.
-6. Apply approved changes with the cheapest calls: ontime_group_entries to group existing entries, ontime_batch_update_entries when several entries get the same values (e.g. recolouring), ontime_update_entry for per-entry changes, ontime_create_custom_field (after confirming the label) when moving data into a new field.
+6. Apply approved changes with the cheapest calls: ontime_group_entries to group existing entries, ontime_batch_update_entries when several entries get the same values (e.g. recolouring), ontime_update_entry for per-entry changes, ontime_create_custom_field when moving data into a new field.
 7. Finish by reading ontime://views and suggesting views that put the improved structure to work — e.g. an operator view subscribed to a department custom field, or a cuesheet for cross-department editing.`,
     );
   }
@@ -271,14 +271,14 @@ Then:
 Custom fields are project-scoped. They appear as columns in the cuesheet and can be set on any event, milestone, or group. Changes apply to all rundowns in the project.
 
 Steps:
-1. Call ontime_get_custom_fields to see what fields already exist. This is mandatory before creating — to avoid duplicates such as "Cam", "camera", and "Cameras".
-2. Carry out the instruction using the tools below. Confirm destructive changes (rename, delete) with the user before calling.
+1. Call ontime_get_custom_fields to see what fields already exist. Reuse an existing field when it covers the concept — avoid duplicates such as "Cam", "camera", and "Cameras".
+2. Carry out the instruction using the tools below. Creating a field is non-destructive — do it directly. Confirm destructive changes (rename, delete) with the user before calling.
 
 Creating a field:
 - Call ontime_create_custom_field with { label, type, colour }.
-- label: human-readable name (alphanumeric with spaces). The key is auto-derived: spaces → underscores (e.g. "Camera Angle" → "Camera_Angle"). Confirm the derived key with the user before creating.
+- label: human-readable name (letters, numbers and spaces). The key is auto-derived: spaces → underscores (e.g. "Camera Angle" → "Camera_Angle").
 - type: "text" for short string values, "image" for image URLs. Cannot be changed after creation.
-- colour: hex colour (#RRGGBB) used to visually identify this column in the cuesheet. Ask the user what colour to use if not specified.
+- colour: hex colour (#RRGGBB) used to visually identify this column in the cuesheet. If unspecified, pick one from the default Ontime palette matching the department.
 - Returns: { key, customFields } — use the returned key when setting values on entries.
 
 Renaming or recolouring a field:

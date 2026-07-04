@@ -61,7 +61,7 @@ export const EVENT_WRITABLE_FIELDS = {
     type: 'object',
     additionalProperties: { type: 'string' },
     description:
-      'Custom field values keyed by existing project field key, e.g. { "camera": "CAM 2" }. Get available keys with ontime_get_custom_fields. Adding new custom field definitions is a separate project-level operation.',
+      'Custom field values keyed by project field key, e.g. { "Camera": "CAM 2" }. Keys are case-sensitive — get them with ontime_get_custom_fields, and create missing fields with ontime_create_custom_field.',
   },
   ...EVENT_TIMER_FIELDS,
 } as const;
@@ -181,12 +181,11 @@ Events, milestones and groups store values at \`entry.custom[fieldKey]\`.
 
 Managing field definitions:
 - Read: \`ontime_get_custom_fields\` — returns \`{ [key]: { label, type, colour } }\`
-- Create: \`ontime_create_custom_field { label, type, colour }\` — key is auto-derived from label (spaces → underscores). Confirm the derived key before creating. Returns \`{ key, customFields }\`.
+- Create: \`ontime_create_custom_field { label, type, colour }\` — key is auto-derived from label (spaces → underscores). Returns \`{ key, customFields }\`.
 - Rename/recolour: \`ontime_update_custom_field { key, label?, colour? }\` — renaming the label changes the derived key and cascades to all entry references across all rundowns. Type cannot be changed.
 - Delete: \`ontime_delete_custom_field { key }\` — removes the field definition and its values from every entry in all rundowns. Destructive, confirm first.
 
-When setting \`custom\` values on entries, only use existing field keys. If a key does not exist, create it with \`ontime_create_custom_field\` first.
-Show the existing field list before creating to avoid duplicates such as \`Cam\`, \`camera\`, and \`Cameras\`.
+Keys are case-sensitive. When setting \`custom\` values, reuse an existing field when it covers the concept; otherwise create the missing field — creation is non-destructive and needs no confirmation. Rename and delete are the destructive operations: confirm those with the user.
 
 ## Targeting rundowns
 Entry read/write tools accept an optional \`rundownId\`.
