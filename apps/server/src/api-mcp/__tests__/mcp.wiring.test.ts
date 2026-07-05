@@ -5,7 +5,14 @@ vi.mock('../../api-data/project-data/projectData.dao.js', () => ({
 }));
 
 vi.mock('../../api-data/rundown/rundown.dao.js', () => ({
-  getCurrentRundown: vi.fn(() => ({ id: 'rundown-1', title: 'Test', order: [], flatOrder: [], entries: {}, revision: 0 })),
+  getCurrentRundown: vi.fn(() => ({
+    id: 'rundown-1',
+    title: 'Test',
+    order: [],
+    flatOrder: [],
+    entries: {},
+    revision: 0,
+  })),
   getProjectCustomFields: vi.fn(() => ({})),
 }));
 

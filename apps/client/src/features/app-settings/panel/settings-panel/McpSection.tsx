@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { generateUrl } from '../../../../common/api/session';
 import CopyTag from '../../../../common/components/copy-tag/CopyTag';
 import useInfo from '../../../../common/hooks-query/useInfo';
+import { hostToBaseUrl } from '../../../../common/utils/linkUtils';
 import { isOntimeCloud, serverURL } from '../../../../externals';
 import * as Panel from '../../panel-utils/PanelUtils';
 
@@ -17,7 +18,7 @@ export default function McpSection() {
 
       // for local setups we prefer the localhost IP to avoid remote access
       if (infoData.networkInterfaces.length > 0) {
-        return `http://${infoData.networkInterfaces[0].address}:${infoData.serverPort}`;
+        return hostToBaseUrl(infoData.networkInterfaces[0].address, infoData.serverPort);
       }
       return serverURL;
     })();

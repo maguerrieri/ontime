@@ -119,7 +119,8 @@ export function assertKnownCustomFields(...customValues: Array<EntryFieldArgs['c
         return match ? `"${key}" → "${match}"` : null;
       })
       .filter(Boolean);
-    const caseHint = suggestions.length > 0 ? ` Keys are case-sensitive — did you mean: ${suggestions.join(', ')}?` : '';
+    const caseHint =
+      suggestions.length > 0 ? ` Keys are case-sensitive — did you mean: ${suggestions.join(', ')}?` : '';
 
     throw new Error(
       `Unknown custom field key(s): ${missing}. ${hint}${caseHint} ` +

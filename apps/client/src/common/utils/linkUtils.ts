@@ -54,3 +54,12 @@ export function linkToOtherHost(
   }
   return destination.toString();
 }
+
+/**
+ * Builds a base URL for reaching the Ontime server on a given network interface.
+ * The scheme follows the page so HTTPS deployments (eg. behind a TLS proxy) get https URLs.
+ */
+export function hostToBaseUrl(host: string, port: number): string {
+  const scheme = window.location.protocol === 'https:' ? 'https' : 'http';
+  return `${scheme}://${host}:${port}`;
+}
