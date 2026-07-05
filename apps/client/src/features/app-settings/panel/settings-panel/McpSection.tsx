@@ -2,34 +2,23 @@ import { useEffect, useState } from 'react';
 
 import { generateUrl } from '../../../../common/api/session';
 import CopyTag from '../../../../common/components/copy-tag/CopyTag';
-import useInfo from '../../../../common/hooks-query/useInfo';
-import { hostToBaseUrl } from '../../../../common/utils/linkUtils';
-import { isOntimeCloud, serverURL } from '../../../../externals';
+import { serverURL } from '../../../../externals';
 import * as Panel from '../../panel-utils/PanelUtils';
 
 export default function McpSection() {
-  const { data: infoData } = useInfo();
   const [mcpEndpointUrl, setMcpEndpointUrl] = useState('');
 
   // generate url
   useEffect(() => {
-    const baseUrl = (() => {
-      if (isOntimeCloud) return serverURL;
-
-      // for local setups we prefer the localhost IP to avoid remote access
-      if (infoData.networkInterfaces.length > 0) {
-        return hostToBaseUrl(infoData.networkInterfaces[0].address, infoData.serverPort);
-      }
-      return serverURL;
-    })();
-
+    // the page origin is reachable wherever the user is browsing from,
+    // and follows the deployment (cloud, reverse proxy, port mappings)
     // we are reusing the endpoint, so locking config and nav have no effect
-    generateUrl({ baseUrl, path: 'mcp', authenticate: true, lockConfig: false, lockNav: false })
+    generateUrl({ baseUrl: serverURL, path: 'mcp', authenticate: true, lockConfig: false, lockNav: false })
       .then(setMcpEndpointUrl)
       .catch(() => {
         setMcpEndpointUrl('');
       });
-  }, [infoData]);
+  }, []);
 
   const mcpClientConfig = mcpEndpointUrl
     ? JSON.stringify({ mcpServers: { ontime: { url: mcpEndpointUrl } } }, null, 2)
