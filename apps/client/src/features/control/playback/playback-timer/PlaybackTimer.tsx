@@ -1,12 +1,15 @@
 import { MaybeNumber, Playback, TimerPhase } from 'ontime-types';
 import { dayInMs, millisToString } from 'ontime-utils';
 import { PropsWithChildren } from 'react';
+import { IoEyeOffOutline, IoEyeOutline } from 'react-icons/io5';
 
 import AppLink from '../../../../common/components/link/app-link/AppLink';
 import Tooltip from '../../../../common/components/tooltip/Tooltip';
 import useReport from '../../../../common/hooks-query/useReport';
-import { useTimer } from '../../../../common/hooks/useSocket';
+import { useSelectedEventScheduledEnd, useTimer } from '../../../../common/hooks/useSocket';
+import { useEditorSettings } from '../../../../common/stores/editorSettings';
 import { formatDuration } from '../../../../common/utils/time';
+import TapButton from '../tap-button/TapButton';
 import TimerDisplay from '../timer-display/TimerDisplay';
 
 import style from './PlaybackTimer.module.scss';
@@ -25,6 +28,9 @@ function resolveAddedTimeLabel(addedTime: number) {
 
 export default function PlaybackTimer({ children }: PropsWithChildren) {
   const timer = useTimer();
+  const scheduledEnd = useSelectedEventScheduledEnd();
+  const showScheduledEnd = useEditorSettings((state) => state.showScheduledEnd);
+  const setShowScheduledEnd = useEditorSettings((state) => state.setShowScheduledEnd);
 
   const isRolling = timer.playback === Playback.Roll;
   const isWaiting = timer.phase === TimerPhase.Pending;
@@ -51,8 +57,26 @@ export default function PlaybackTimer({ children }: PropsWithChildren) {
         {isWaiting ? (
           <span className={style.rolltag}>Roll: Countdown to start</span>
         ) : (
-          <RunningStatus startedAt={timer.startedAt} expectedFinish={timer.expectedFinish} playback={timer.playback} />
+          <RunningStatus
+            startedAt={timer.startedAt}
+            expectedFinish={timer.expectedFinish}
+            playback={timer.playback}
+            scheduledEnd={scheduledEnd}
+            showScheduledEnd={showScheduledEnd}
+          />
         )}
+        <TapButton
+          onClick={() => setShowScheduledEnd(!showScheduledEnd)}
+          active={showScheduledEnd}
+          aspect='tight'
+          className={style.scheduledEndToggle}
+        >
+          {showScheduledEnd ? (
+            <IoEyeOutline title='Hide scheduled end' />
+          ) : (
+            <IoEyeOffOutline title='Show scheduled end' />
+          )}
+        </TapButton>
       </div>
       {children}
     </div>
@@ -63,8 +87,10 @@ interface RunningStatusProps {
   startedAt: MaybeNumber;
   expectedFinish: MaybeNumber;
   playback: Playback;
+  scheduledEnd: MaybeNumber;
+  showScheduledEnd: boolean;
 }
-function RunningStatus({ startedAt, expectedFinish, playback }: RunningStatusProps) {
+function RunningStatus({ startedAt, expectedFinish, playback, scheduledEnd, showScheduledEnd }: RunningStatusProps) {
   if (playback === Playback.Stop) {
     return <StoppedStatus />;
   }
@@ -72,6 +98,8 @@ function RunningStatus({ startedAt, expectedFinish, playback }: RunningStatusPro
   const started = millisToString(startedAt);
   const finishedMs = expectedFinish !== null ? expectedFinish % dayInMs : null;
   const finish = millisToString(finishedMs);
+  const scheduledMs = scheduledEnd !== null ? scheduledEnd % dayInMs : null;
+  const scheduled = millisToString(scheduledMs);
 
   return (
     <>
@@ -79,8 +107,14 @@ function RunningStatus({ startedAt, expectedFinish, playback }: RunningStatusPro
         <span className={style.tag}>Started at</span>
         <span className={style.time}>{started}</span>
       </span>
+      {showScheduledEnd && (
+        <span className={style.finish}>
+          <span className={style.tag}>Scheduled end</span>
+          <span className={style.time}>{scheduled}</span>
+        </span>
+      )}
       <span className={style.finish}>
-        <span className={style.tag}>Expect end</span>
+        <span className={style.tag}>Projected end</span>
         <span className={style.time}>{finish}</span>
       </span>
     </>

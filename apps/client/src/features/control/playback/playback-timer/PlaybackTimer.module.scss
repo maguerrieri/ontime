@@ -83,3 +83,10 @@
   color: $ontime-roll;
   font-size: $text-body-size;
 }
+
+.scheduledEndToggle {
+  margin-left: auto;
+  padding: 0.25rem;
+  min-width: unset;
+  align-self: center;
+}
