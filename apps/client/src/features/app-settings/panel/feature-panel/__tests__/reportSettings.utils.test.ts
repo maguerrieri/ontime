@@ -42,7 +42,7 @@ describe('makeReportCSV()', () => {
   test('includes a Projected End column after Scheduled End', () => {
     const combined = getCombinedReport(report, rundown, flatOrder, { id: 'b', expectedFinish: 1500000 });
     const csv = makeReportCSV(combined);
-    const header = csv.split('\n')[0];
+    const header = csv.split(/\r?\n/)[0];
     expect(header).toContain('Projected End');
     expect(header.indexOf('Projected End')).toBeGreaterThan(header.indexOf('Scheduled End'));
     expect(header.indexOf('Projected End')).toBeLessThan(header.indexOf('Actual End'));
