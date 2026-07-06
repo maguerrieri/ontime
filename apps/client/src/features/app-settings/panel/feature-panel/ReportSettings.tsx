@@ -1,4 +1,5 @@
-import { Playback } from 'ontime-types';
+import { TimerPhase } from 'ontime-types';
+import { isPlaybackActive } from 'ontime-utils';
 import { useMemo } from 'react';
 import { IoTrashBin } from 'react-icons/io5';
 
@@ -20,7 +21,7 @@ export default function ReportSettings() {
   const { data } = useRundown();
   const selectedEventId = useSelectedEventId();
   const timer = useTimer();
-  const isRunning = selectedEventId !== null && timer.playback !== Playback.Stop;
+  const isRunning = selectedEventId !== null && isPlaybackActive(timer.playback) && timer.phase !== TimerPhase.Pending;
   const expectedFinish = timer.expectedFinish;
 
   const clearReport = async () => await deleteAllReport();
