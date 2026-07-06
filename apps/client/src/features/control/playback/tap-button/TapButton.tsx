@@ -13,10 +13,11 @@ interface TapButtonProps {
   theme?: Playback | 'neutral';
   active?: boolean;
   className?: string;
+  ariaLabel?: string;
 }
 
 const TapButton = forwardRef((props: PropsWithChildren<TapButtonProps>, ref: ForwardedRef<HTMLButtonElement>) => {
-  const { children, disabled, onClick, theme = 'neutral', aspect = 'normal', active, className } = props;
+  const { children, disabled, onClick, theme = 'neutral', aspect = 'normal', active, className, ariaLabel } = props;
 
   return (
     <button
@@ -24,6 +25,7 @@ const TapButton = forwardRef((props: PropsWithChildren<TapButtonProps>, ref: For
       disabled={disabled}
       type='button'
       onClick={onClick}
+      aria-label={ariaLabel}
       ref={ref}
     >
       {children}
