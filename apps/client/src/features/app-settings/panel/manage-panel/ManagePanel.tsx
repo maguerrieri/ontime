@@ -1,6 +1,7 @@
 import useScrollIntoView from '../../../../common/hooks/useScrollIntoView';
 import type { PanelBaseProps } from '../../panel-list/PanelList';
 import * as Panel from '../../panel-utils/PanelUtils';
+import AddTimeSettings from './AddTimeSettings';
 import CustomFieldSettings from './CustomFields';
 import ManageRundowns from './ManageRundowns';
 import RundownDefaultSettings from './RundownDefaultSettings';
@@ -8,6 +9,7 @@ import SourcesPanel from './sources-panel/SourcesPanel';
 
 export default function ManagePanel({ location }: PanelBaseProps) {
   const defaultsRef = useScrollIntoView<HTMLDivElement>('defaults', location);
+  const addTimeRef = useScrollIntoView<HTMLDivElement>('add-time', location);
   const customRef = useScrollIntoView<HTMLDivElement>('custom', location);
   const rundownsRef = useScrollIntoView<HTMLDivElement>('rundowns', location);
   const sheetsRef = useScrollIntoView<HTMLDivElement>('sheets', location);
@@ -17,6 +19,11 @@ export default function ManagePanel({ location }: PanelBaseProps) {
       <Panel.Header>Project data</Panel.Header>
       <div ref={defaultsRef}>
         <RundownDefaultSettings />
+      </div>
+      <div ref={addTimeRef}>
+        <Panel.Section>
+          <AddTimeSettings />
+        </Panel.Section>
       </div>
       <div ref={customRef}>
         <CustomFieldSettings />
