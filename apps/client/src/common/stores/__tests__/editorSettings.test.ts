@@ -1,6 +1,11 @@
 import { useEditorSettings } from '../editorSettings';
 
 describe('editorSettings showScheduledEnd', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useEditorSettings.setState({ showScheduledEnd: false });
+  });
+
   test('exposes the flag and defaults to a boolean', () => {
     expect(typeof useEditorSettings.getState().showScheduledEnd).toBe('boolean');
   });
