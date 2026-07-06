@@ -26,6 +26,7 @@ const TapButton = forwardRef((props: PropsWithChildren<TapButtonProps>, ref: For
       type='button'
       onClick={onClick}
       aria-label={ariaLabel}
+      aria-pressed={active}
       ref={ref}
     >
       {children}
