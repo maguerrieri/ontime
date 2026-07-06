@@ -2,6 +2,7 @@ import { EndAction, TimeStrategy, TimerType } from 'ontime-types';
 import { validateEndAction, validateTimeStrategy, validateTimerType } from 'ontime-utils';
 import { create } from 'zustand';
 
+import { parseAddTimePresets, sanitizeAddTimePresets, serializeAddTimePresets } from '../utils/addTimePresets';
 import { booleanFromLocalStorage } from '../utils/localStorage';
 
 type EditorSettingsStore = {
@@ -14,6 +15,8 @@ type EditorSettingsStore = {
   defaultEndAction: EndAction;
   inheritGroupColour: boolean;
   showScheduledEnd: boolean;
+  addTimePresets: number[];
+  showAddTimeInput: boolean;
   setDefaultDuration: (defaultDuration: string) => void;
   setLinkPrevious: (linkPrevious: boolean) => void;
   setInheritGroupColour: (inheritGroupColour: boolean) => void;
@@ -23,6 +26,8 @@ type EditorSettingsStore = {
   setDefaultTimerType: (defaultTimerType: TimerType) => void;
   setDefaultEndAction: (defaultEndAction: EndAction) => void;
   setShowScheduledEnd: (showScheduledEnd: boolean) => void;
+  setAddTimePresets: (addTimePresets: number[]) => void;
+  setShowAddTimeInput: (showAddTimeInput: boolean) => void;
 };
 
 export const editorSettingsDefaults = {
@@ -35,6 +40,8 @@ export const editorSettingsDefaults = {
   endAction: EndAction.None,
   inheritGroupColour: false,
   showScheduledEnd: false,
+  addTimePresets: [60_000, 300_000], // 1 min and 5 min
+  showAddTimeInput: true,
 };
 
 enum EditorSettingsKeys {
@@ -47,6 +54,8 @@ enum EditorSettingsKeys {
   DefaultEndAction = 'ontime-default-end-action',
   InheritGroupColour = 'ontime-inherit-group-colour',
   ShowScheduledEnd = 'ontime-show-scheduled-end',
+  AddTimePresets = 'ontime-add-time-presets',
+  ShowAddTimeInput = 'ontime-show-add-time-input',
 }
 
 export const useEditorSettings = create<EditorSettingsStore>((set) => {
@@ -74,6 +83,14 @@ export const useEditorSettings = create<EditorSettingsStore>((set) => {
     showScheduledEnd: booleanFromLocalStorage(
       EditorSettingsKeys.ShowScheduledEnd,
       editorSettingsDefaults.showScheduledEnd,
+    ),
+    addTimePresets: parseAddTimePresets(
+      localStorage.getItem(EditorSettingsKeys.AddTimePresets),
+      editorSettingsDefaults.addTimePresets,
+    ),
+    showAddTimeInput: booleanFromLocalStorage(
+      EditorSettingsKeys.ShowAddTimeInput,
+      editorSettingsDefaults.showAddTimeInput,
     ),
 
     setDefaultDuration: (defaultDuration) =>
@@ -122,6 +139,17 @@ export const useEditorSettings = create<EditorSettingsStore>((set) => {
       set(() => {
         localStorage.setItem(EditorSettingsKeys.ShowScheduledEnd, String(showScheduledEnd));
         return { showScheduledEnd };
+      }),
+    setAddTimePresets: (addTimePresets) =>
+      set(() => {
+        const sanitized = sanitizeAddTimePresets(addTimePresets);
+        localStorage.setItem(EditorSettingsKeys.AddTimePresets, serializeAddTimePresets(sanitized));
+        return { addTimePresets: sanitized };
+      }),
+    setShowAddTimeInput: (showAddTimeInput) =>
+      set(() => {
+        localStorage.setItem(EditorSettingsKeys.ShowAddTimeInput, String(showAddTimeInput));
+        return { showAddTimeInput };
       }),
   };
 });
