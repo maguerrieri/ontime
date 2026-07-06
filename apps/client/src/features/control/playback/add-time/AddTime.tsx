@@ -1,20 +1,22 @@
 import { useLocalStorage } from '@mantine/hooks';
-import { Playback } from 'ontime-types';
+import { Playback, TimerPhase } from 'ontime-types';
 import { MILLIS_PER_HOUR, parseUserTime } from 'ontime-utils';
 import { IoAdd, IoRemove } from 'react-icons/io5';
 
 import TimeInput from '../../../../common/components/input/time-input/TimeInput';
 import { setPlayback } from '../../../../common/hooks/useSocket';
+import { canAddTimeInState } from '../playbackControl.utils';
 import TapButton from '../tap-button/TapButton';
 
 import style from './AddTime.module.scss';
 
 interface AddTimeProps {
   playback: Playback;
+  timerPhase: TimerPhase;
 }
 
 export default function AddTime(props: AddTimeProps) {
-  const { playback } = props;
+  const { playback, timerPhase } = props;
   const [timeInMs, setTime] = useLocalStorage({ key: 'add-time', defaultValue: 300_000 }); // 5 minutes
 
   const handleTimeChange = (_field: string, value: string) => {
@@ -32,7 +34,7 @@ export default function AddTime(props: AddTimeProps) {
     }
   };
 
-  const canAddTime = playback === Playback.Play || playback === Playback.Pause;
+  const canAddTime = canAddTimeInState(playback, timerPhase);
   const doDisableButtons = !canAddTime || timeInMs === 0;
 
   return (
