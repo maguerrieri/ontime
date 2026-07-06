@@ -1,3 +1,4 @@
+import { Playback } from 'ontime-types';
 import { useMemo } from 'react';
 import { IoTrashBin } from 'react-icons/io5';
 
@@ -6,6 +7,7 @@ import { createBlob, downloadBlob } from '../../../../common/api/utils';
 import Button from '../../../../common/components/buttons/Button';
 import useReport from '../../../../common/hooks-query/useReport';
 import useRundown from '../../../../common/hooks-query/useRundown';
+import { useSelectedEventId, useTimer } from '../../../../common/hooks/useSocket';
 import { cx } from '../../../../common/utils/styleUtils';
 import { formatTime } from '../../../../common/utils/time';
 import * as Panel from '../../panel-utils/PanelUtils';
@@ -16,6 +18,10 @@ import style from './ReportSettings.module.scss';
 export default function ReportSettings() {
   const { data: reportData } = useReport();
   const { data } = useRundown();
+  const selectedEventId = useSelectedEventId();
+  const timer = useTimer();
+  const isRunning = selectedEventId !== null && timer.playback !== Playback.Stop;
+  const expectedFinish = timer.expectedFinish;
 
   const clearReport = async () => await deleteAllReport();
   const downloadCSV = (combinedReport: CombinedReport[]) => {
@@ -28,8 +34,9 @@ export default function ReportSettings() {
   };
 
   const combinedReport = useMemo(() => {
-    return getCombinedReport(reportData, data.entries, data.flatOrder);
-  }, [reportData, data.entries, data.flatOrder]);
+    const running = isRunning && selectedEventId !== null ? { id: selectedEventId, expectedFinish } : null;
+    return getCombinedReport(reportData, data.entries, data.flatOrder, running);
+  }, [reportData, data.entries, data.flatOrder, isRunning, selectedEventId, expectedFinish]);
 
   return (
     <Panel.Section>
@@ -61,6 +68,7 @@ export default function ReportSettings() {
                 <th>Scheduled Start</th>
                 <th>Actual Start</th>
                 <th>Scheduled End</th>
+                <th>Projected End</th>
                 <th>Actual End</th>
               </tr>
             </thead>
@@ -88,6 +96,7 @@ export default function ReportSettings() {
                     <th className={cx([start && style[start]])}>{formatTime(entry.scheduledStart)}</th>
                     <th className={cx([start && style[start]])}>{formatTime(entry.actualStart)}</th>
                     <th className={cx([end && style[end]])}>{formatTime(entry.scheduledEnd)}</th>
+                    <th>{formatTime(entry.projectedEnd)}</th>
                     <th className={cx([end && style[end]])}>{formatTime(entry.actualEnd)}</th>
                   </tr>
                 );
