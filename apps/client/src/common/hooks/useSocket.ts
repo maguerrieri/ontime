@@ -130,6 +130,8 @@ export const setAuxTimer = {
 
 export const useSelectedEventId = createSelector((state: RuntimeStore) => state.eventNow?.id ?? null);
 
+export const useSelectedEventScheduledEnd = createSelector((state: RuntimeStore) => state.eventNow?.timeEnd ?? null);
+
 export const useCurrentGroupId = createSelector((state: RuntimeStore) => state.groupNow?.id ?? null);
 
 export const setEventPlayback = {
