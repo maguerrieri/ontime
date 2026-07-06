@@ -19,12 +19,21 @@ test('preset buttons apply the configured add/remove amount', async ({ page, req
   await page.goto('/editor');
   await dismissWelcome(page);
 
+  // start from a clean rundown with a single event (self-contained, independent of prior tests)
+  await page.getByRole('button', { name: 'Edit' }).click();
+  await page.getByRole('button', { name: 'Rundown menu' }).click();
+  await page.getByRole('menuitem', { name: 'Clear all' }).click();
+  await page.getByRole('button', { name: 'Delete all' }).click();
+  await page.getByRole('button', { name: 'Create Event' }).click();
+  await page.getByRole('button', { name: 'Event' }).nth(4).click();
+
+  // start the event so add-time is enabled (a fresh start resets addedTime to 0)
+  await page.getByTestId('entry-1').getByRole('button', { name: 'Start event' }).click();
+  await expect(page.getByTestId('entry-1').getByTestId('rundown-event')).toHaveAttribute('data-running');
+  await expect.poll(() => getAddedTime(request)).toBe(0);
+
   // the main playback add-time control lives inside the timer-control panel
   const timerControl = page.getByTestId('panel-timer-control');
-
-  // start playback so add-time is enabled (demo project has events loaded)
-  await timerControl.getByRole('button', { name: 'Start', exact: true }).click();
-  await expect.poll(async () => (await (await request.get('/api/poll')).json()).payload.timer.playback).toBe('play');
 
   // default presets are 1 min and 5 min
   await timerControl.getByRole('button', { name: 'Add 1m', exact: true }).click();
