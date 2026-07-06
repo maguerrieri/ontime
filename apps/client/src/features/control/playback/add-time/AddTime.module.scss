@@ -14,3 +14,12 @@
 .tallButtons {
   height: 28px;
 }
+
+.presetButton {
+  height: 28px;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: $element-inner-spacing;
+  font-size: calc(1rem - 3px);
+  white-space: nowrap;
+}

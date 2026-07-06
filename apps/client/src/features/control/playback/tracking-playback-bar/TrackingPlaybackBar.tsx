@@ -1,6 +1,7 @@
 import { useHotkeys, useLocalStorage } from '@mantine/hooks';
 import { Playback, SimpleDirection, SimplePlayback, TimerPhase } from 'ontime-types';
 import { millisToString, parseUserTime } from 'ontime-utils';
+import { Fragment } from 'react';
 import { IoAdd, IoArrowDown, IoArrowUp, IoPause, IoPlay, IoPlaySkipForward, IoRemove, IoStop } from 'react-icons/io5';
 
 import TimeInput from '../../../../common/components/input/time-input/TimeInput';
@@ -12,6 +13,7 @@ import {
   usePlaybackControl,
   useTimer,
 } from '../../../../common/hooks/useSocket';
+import { useEditorSettings } from '../../../../common/stores/editorSettings';
 import { enDash } from '../../../../common/utils/styleUtils';
 import { formatDuration } from '../../../../common/utils/time';
 import { getPlaybackControlState } from '../playbackControl.utils';
@@ -29,6 +31,8 @@ export default function TrackingPlaybackBar() {
   const auxTime = useAuxTimerTime(1);
 
   const [addTimeInMs] = useLocalStorage({ key: 'add-time', defaultValue: 300_000 });
+  const addTimePresets = useEditorSettings((state) => state.addTimePresets);
+  const showAddTimeInput = useEditorSettings((state) => state.showAddTimeInput);
 
   const { disableGo, disableNext, disableAddTime, isPlaying, goAction, goLabel } = getPlaybackControlState({
     playback,
@@ -46,6 +50,11 @@ export default function TrackingPlaybackBar() {
     } else {
       setPlayback.addTime(-1 * addTimeInMs);
     }
+  };
+
+  const handleAddPreset = (amountInMs: number) => {
+    if (disableAddTime) return;
+    setPlayback.addTime(amountInMs);
   };
 
   const handleAuxPlayPause = () => {
@@ -119,24 +128,57 @@ export default function TrackingPlaybackBar() {
 
         <div className={style.addSection}>
           <div className={style.separator} />
-          <TapButton
-            onClick={() => handleAddTime('remove')}
-            disabled={disableAddTimeWithAmount}
-            className={style.iconButtonWithLabel}
-            aspect='square'
-          >
-            <IoRemove />
-            {addTimeLabel}
-          </TapButton>
-          <TapButton
-            onClick={() => handleAddTime('add')}
-            disabled={disableAddTimeWithAmount}
-            className={style.iconButtonWithLabel}
-            aspect='square'
-          >
-            <IoAdd />
-            {addTimeLabel}
-          </TapButton>
+          {showAddTimeInput && (
+            <>
+              <TapButton
+                onClick={() => handleAddTime('remove')}
+                disabled={disableAddTimeWithAmount}
+                className={style.iconButtonWithLabel}
+                aspect='square'
+                ariaLabel={`Remove ${addTimeLabel}`}
+              >
+                <IoRemove />
+                {addTimeLabel}
+              </TapButton>
+              <TapButton
+                onClick={() => handleAddTime('add')}
+                disabled={disableAddTimeWithAmount}
+                className={style.iconButtonWithLabel}
+                aspect='square'
+                ariaLabel={`Add ${addTimeLabel}`}
+              >
+                <IoAdd />
+                {addTimeLabel}
+              </TapButton>
+            </>
+          )}
+          {addTimePresets.map((preset) => {
+            const presetLabel = formatDuration(preset);
+            return (
+              <Fragment key={preset}>
+                <TapButton
+                  onClick={() => handleAddPreset(-1 * preset)}
+                  disabled={disableAddTime}
+                  className={style.iconButtonWithLabel}
+                  aspect='square'
+                  ariaLabel={`Remove ${presetLabel}`}
+                >
+                  <IoRemove />
+                  {presetLabel}
+                </TapButton>
+                <TapButton
+                  onClick={() => handleAddPreset(preset)}
+                  disabled={disableAddTime}
+                  className={style.iconButtonWithLabel}
+                  aspect='square'
+                  ariaLabel={`Add ${presetLabel}`}
+                >
+                  <IoAdd />
+                  {presetLabel}
+                </TapButton>
+              </Fragment>
+            );
+          })}
         </div>
       </div>
 
