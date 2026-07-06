@@ -153,7 +153,8 @@ export default function TrackingPlaybackBar() {
             </>
           )}
           {addTimePresets.map((preset) => {
-            const presetLabel = formatDuration(preset);
+            // hideSeconds=false so sub-minute presets (e.g. 30s) still render a usable label
+            const presetLabel = formatDuration(preset, false);
             return (
               <Fragment key={preset}>
                 <TapButton

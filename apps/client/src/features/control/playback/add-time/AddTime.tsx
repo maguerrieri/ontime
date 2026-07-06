@@ -57,7 +57,8 @@ export default function AddTime(props: AddTimeProps) {
         </>
       )}
       {addTimePresets.map((preset) => {
-        const label = formatDuration(preset);
+        // hideSeconds=false so sub-minute presets (e.g. 30s) still render a usable label
+        const label = formatDuration(preset, false);
         return (
           <div key={preset} className={style.addButtons}>
             <TapButton

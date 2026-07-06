@@ -53,15 +53,14 @@ export default function AddTimeSettings() {
                   title={`Preset ${index + 1}`}
                   description={
                     preset === undefined
-                      ? 'Add a preset amount (leave empty for none)'
-                      : 'Applied as a −/+ button pair; clear to remove'
+                      ? 'Set an amount to add a preset'
+                      : 'Applied as a −/+ button pair; set to 0 to remove'
                   }
                 />
                 <TimeInput
                   name={`preset-${index}`}
                   submitHandler={(_field, value) => handlePresetChange(index, value)}
                   time={preset}
-                  placeholder='—'
                 />
               </Panel.ListItem>
             );
