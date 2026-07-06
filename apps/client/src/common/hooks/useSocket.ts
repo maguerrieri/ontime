@@ -132,6 +132,8 @@ export const useSelectedEventId = createSelector((state: RuntimeStore) => state.
 
 export const useSelectedEventScheduledEnd = createSelector((state: RuntimeStore) => state.eventNow?.timeEnd ?? null);
 
+export const useAddedTime = createSelector((state: RuntimeStore) => state.timer.addedTime);
+
 export const useCurrentGroupId = createSelector((state: RuntimeStore) => state.groupNow?.id ?? null);
 
 export const setEventPlayback = {
