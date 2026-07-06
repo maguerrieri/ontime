@@ -12,7 +12,7 @@ export default function PlaybackControl() {
   return (
     <div className={style.mainContainer}>
       <PlaybackTimer>
-        <AddTime playback={data.playback} />
+        <AddTime playback={data.playback} timerPhase={data.timerPhase} />
       </PlaybackTimer>
       <PlaybackButtons
         playback={data.playback}
