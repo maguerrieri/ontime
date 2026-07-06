@@ -12,15 +12,19 @@ export type CombinedReport = {
   actualStart: MaybeNumber;
   scheduledEnd: number;
   actualEnd: MaybeNumber;
+  projectedEnd: MaybeNumber;
 };
 
 /**
- * Creates a combined report with the rundown data
+ * Creates a combined report with the rundown data.
+ * `running` carries the currently-loaded event's live expected finish, used to
+ * show a projected end for the event that has not ended yet.
  */
 export function getCombinedReport(
   report: OntimeReport,
   rundown: RundownEntries,
   flatOrder: EntryId[],
+  running: { id: EntryId; expectedFinish: MaybeNumber } | null,
 ): CombinedReport[] {
   if (Object.keys(report).length === 0) return [];
   if (flatOrder.length === 0) return [];
@@ -33,6 +37,8 @@ export function getCombinedReport(
     const entry = rundown[id];
     if (!entry || !isOntimeEvent(entry)) continue;
 
+    const projectedEnd = running?.id === id ? running.expectedFinish : null;
+
     if (!(id in report)) {
       combinedReport.push({
         id: id,
@@ -43,6 +49,7 @@ export function getCombinedReport(
         actualEnd: null,
         scheduledEnd: entry.timeEnd,
         actualStart: null,
+        projectedEnd,
       });
     }
 
@@ -56,6 +63,7 @@ export function getCombinedReport(
         actualEnd: report[id].endedAt,
         scheduledEnd: entry.timeEnd,
         actualStart: report[id].startedAt,
+        projectedEnd,
       });
     }
     index++;
@@ -64,7 +72,16 @@ export function getCombinedReport(
   return combinedReport;
 }
 
-const csvHeader = ['Index', 'Title', 'Cue', 'Scheduled Start', 'Actual Start', 'Scheduled End', 'Actual End'];
+const csvHeader = [
+  'Index',
+  'Title',
+  'Cue',
+  'Scheduled Start',
+  'Actual Start',
+  'Scheduled End',
+  'Projected End',
+  'Actual End',
+];
 
 /**
  * Transforms a CombinedReport into a CSV string
@@ -81,6 +98,7 @@ export function makeReportCSV(combinedReport: CombinedReport[]) {
       formatTime(entry.scheduledStart),
       formatTime(entry.actualStart),
       formatTime(entry.scheduledEnd),
+      formatTime(entry.projectedEnd),
       formatTime(entry.actualEnd),
     ]);
   }
