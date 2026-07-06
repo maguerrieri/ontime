@@ -3,6 +3,17 @@ import { validatePlayback } from 'ontime-utils';
 
 import { setPlayback } from '../../../common/hooks/useSocket';
 
+/**
+ * Single source of truth for when the add/remove-time buttons are usable.
+ * Play/Pause always; Roll only while an event is actively running (not the
+ * "waiting to roll" Pending phase, where the server no-ops add-time).
+ */
+export function canAddTimeInState(playback: Playback, phase: TimerPhase): boolean {
+  if (playback === Playback.Play || playback === Playback.Pause) return true;
+  if (playback === Playback.Roll) return phase !== TimerPhase.Pending;
+  return false;
+}
+
 export interface PlaybackControlInput {
   playback: Playback;
   numEvents: number;
@@ -74,7 +85,7 @@ export function getPlaybackControlState({
     disableRoll: !playbackCan.roll || noEvents,
     disableStop: !playbackCan.stop,
     disableReload: !playbackCan.reload,
-    disableAddTime: playback !== Playback.Play && playback !== Playback.Pause,
+    disableAddTime: !canAddTimeInState(playback, timerPhase),
     goAction,
     goLabel,
   };
