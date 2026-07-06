@@ -70,12 +70,9 @@ export default function PlaybackTimer({ children }: PropsWithChildren) {
           active={showScheduledEnd}
           aspect='tight'
           className={style.scheduledEndToggle}
+          ariaLabel={showScheduledEnd ? 'Hide scheduled end' : 'Show scheduled end'}
         >
-          {showScheduledEnd ? (
-            <IoEyeOutline title='Hide scheduled end' />
-          ) : (
-            <IoEyeOffOutline title='Show scheduled end' />
-          )}
+          {showScheduledEnd ? <IoEyeOutline /> : <IoEyeOffOutline />}
         </TapButton>
       </div>
       {children}
