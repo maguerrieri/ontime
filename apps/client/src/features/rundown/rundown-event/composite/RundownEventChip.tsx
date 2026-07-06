@@ -5,9 +5,10 @@ import { IoCheckmarkCircle } from 'react-icons/io5';
 
 import Tooltip from '../../../../common/components/tooltip/Tooltip';
 import useReport from '../../../../common/hooks-query/useReport';
-import { usePlayback } from '../../../../common/hooks/useSocket';
+import { useAddedTime, usePlayback } from '../../../../common/hooks/useSocket';
 import { cx } from '../../../../common/utils/styleUtils';
 import { formatDuration, useTimeUntilExpectedStart } from '../../../../common/utils/time';
+import { formatAddedTimeChip } from '../rundownEvent.utils';
 
 import style from './RundownEventChip.module.scss';
 
@@ -39,7 +40,7 @@ export default function RundownEventChip({
   const playback = usePlayback();
 
   if (isLoaded) {
-    return null;
+    return <EventAddedTime className={className} />;
   }
 
   const playbackActive = isPlaybackActive(playback);
@@ -64,6 +65,23 @@ export default function RundownEventChip({
   }
 
   return null;
+}
+
+function EventAddedTime({ className }: { className: string }) {
+  const addedTime = useAddedTime();
+  const chip = formatAddedTimeChip(addedTime);
+
+  if (!chip) {
+    return null;
+  }
+
+  const tooltip = `${addedTime > 0 ? 'Added' : 'Removed'} ${millisToString(Math.abs(addedTime))}`;
+
+  return (
+    <Tooltip text={tooltip} render={<span />} className={cx([style.chip, style[chip.tone], className])}>
+      {chip.value}
+    </Tooltip>
+  );
 }
 
 interface EventUntilProps {
