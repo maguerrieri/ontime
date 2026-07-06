@@ -13,6 +13,7 @@ type EditorSettingsStore = {
   defaultTimerType: TimerType;
   defaultEndAction: EndAction;
   inheritGroupColour: boolean;
+  showScheduledEnd: boolean;
   setDefaultDuration: (defaultDuration: string) => void;
   setLinkPrevious: (linkPrevious: boolean) => void;
   setInheritGroupColour: (inheritGroupColour: boolean) => void;
@@ -21,6 +22,7 @@ type EditorSettingsStore = {
   setDangerTime: (dangerTime: string) => void;
   setDefaultTimerType: (defaultTimerType: TimerType) => void;
   setDefaultEndAction: (defaultEndAction: EndAction) => void;
+  setShowScheduledEnd: (showScheduledEnd: boolean) => void;
 };
 
 export const editorSettingsDefaults = {
@@ -32,6 +34,7 @@ export const editorSettingsDefaults = {
   timerType: TimerType.CountDown,
   endAction: EndAction.None,
   inheritGroupColour: false,
+  showScheduledEnd: false,
 };
 
 enum EditorSettingsKeys {
@@ -43,6 +46,7 @@ enum EditorSettingsKeys {
   DefaultTimerType = 'ontime-default-timer-type',
   DefaultEndAction = 'ontime-default-end-action',
   InheritGroupColour = 'ontime-inherit-group-colour',
+  ShowScheduledEnd = 'ontime-show-scheduled-end',
 }
 
 export const useEditorSettings = create<EditorSettingsStore>((set) => {
@@ -66,6 +70,10 @@ export const useEditorSettings = create<EditorSettingsStore>((set) => {
     inheritGroupColour: booleanFromLocalStorage(
       EditorSettingsKeys.InheritGroupColour,
       editorSettingsDefaults.inheritGroupColour,
+    ),
+    showScheduledEnd: booleanFromLocalStorage(
+      EditorSettingsKeys.ShowScheduledEnd,
+      editorSettingsDefaults.showScheduledEnd,
     ),
 
     setDefaultDuration: (defaultDuration) =>
@@ -109,6 +117,11 @@ export const useEditorSettings = create<EditorSettingsStore>((set) => {
       set(() => {
         localStorage.setItem(EditorSettingsKeys.InheritGroupColour, String(inheritGroupColour));
         return { inheritGroupColour };
+      }),
+    setShowScheduledEnd: (showScheduledEnd) =>
+      set(() => {
+        localStorage.setItem(EditorSettingsKeys.ShowScheduledEnd, String(showScheduledEnd));
+        return { showScheduledEnd };
       }),
   };
 });
