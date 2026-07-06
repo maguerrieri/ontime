@@ -36,6 +36,7 @@ const staticOptions = [
     label: 'Project settings',
     secondary: [
       { id: 'manage__defaults', label: 'Rundown defaults' },
+      { id: 'manage__add-time', label: 'Add-time presets' },
       { id: 'manage__custom', label: 'Custom fields' },
       { id: 'manage__rundowns', label: 'Manage rundowns' },
       { id: 'manage__sheets', label: 'Import spreadsheet' },
