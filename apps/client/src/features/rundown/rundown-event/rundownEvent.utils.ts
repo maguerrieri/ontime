@@ -5,7 +5,7 @@ import { formatDuration } from '../../../common/utils/time';
 /**
  * Formats the running event's added/removed time for its rundown chip.
  * Mirrors the over/under chip: `+` (over, orange) for added time, `-` (under,
- * green) for removed time; null when nothing has been added.
+ * green) for removed time; null when no time has been added or removed.
  */
 export function formatAddedTimeChip(addedTime: number): { value: string; tone: 'over' | 'under' } | null {
   if (!addedTime) return null;
