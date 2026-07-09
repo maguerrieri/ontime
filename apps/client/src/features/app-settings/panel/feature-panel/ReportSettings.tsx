@@ -34,10 +34,21 @@ export default function ReportSettings() {
     downloadBlob(blob, 'ontime-report.csv');
   };
 
+  // the static report only rebuilds when the report or rundown changes;
+  // the per-tick expectedFinish is overlaid onto the running row separately
+  const staticReport = useMemo(
+    () => getCombinedReport(reportData, data.entries, data.flatOrder, null),
+    [reportData, data.entries, data.flatOrder],
+  );
+
   const combinedReport = useMemo(() => {
-    const running = isRunning && selectedEventId !== null ? { id: selectedEventId, expectedFinish } : null;
-    return getCombinedReport(reportData, data.entries, data.flatOrder, running);
-  }, [reportData, data.entries, data.flatOrder, isRunning, selectedEventId, expectedFinish]);
+    if (!isRunning || selectedEventId === null) {
+      return staticReport;
+    }
+    return staticReport.map((entry) =>
+      entry.id === selectedEventId ? { ...entry, projectedEnd: expectedFinish } : entry,
+    );
+  }, [staticReport, isRunning, selectedEventId, expectedFinish]);
 
   return (
     <Panel.Section>

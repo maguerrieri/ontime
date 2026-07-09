@@ -8,7 +8,7 @@
 In Roll mode, the timer control's **add-time** buttons (+/− minute) are disabled. An
 operator running a clock-driven show has no way, from the timer control, to say "hold the
 current event a few more minutes." Separately, ontime records a per-event **report**
-(actual `startedAt`/`endedAt`) but shows nothing meaningful for the event that is *currently*
+(actual `startedAt`/`endedAt`) but shows nothing meaningful for the event that is _currently_
 running — its `endedAt` is `null` until it ends, so there is no live sense of when the
 running event will actually finish.
 
@@ -104,14 +104,14 @@ report's persisted `endedAt` is still stamped at real stop time.
 
 ## Components touched
 
-| Unit | Change |
-|------|--------|
-| `add-time/AddTime.tsx` | enable buttons in running Roll |
-| `playback/playbackControl.utils.ts` | matching `disableAddTime` logic |
-| `feature-panel/reportSettings.utils.ts` | `CombinedReport.projectedEnd` + CSV column |
-| `feature-panel/ReportSettings.tsx` | merge live runtime into running row; render column |
-| `common/stores/editorSettings.ts` | `showScheduledEnd` pref (localStorage) |
-| `playback/playback-timer/PlaybackTimer.tsx` | relabel + optional scheduled line + toggle |
+| Unit                                        | Change                                             |
+| ------------------------------------------- | -------------------------------------------------- |
+| `add-time/AddTime.tsx`                      | enable buttons in running Roll                     |
+| `playback/playbackControl.utils.ts`         | matching `disableAddTime` logic                    |
+| `feature-panel/reportSettings.utils.ts`     | `CombinedReport.projectedEnd` + CSV column         |
+| `feature-panel/ReportSettings.tsx`          | merge live runtime into running row; render column |
+| `common/stores/editorSettings.ts`           | `showScheduledEnd` pref (localStorage)             |
+| `playback/playback-timer/PlaybackTimer.tsx` | relabel + optional scheduled line + toggle         |
 
 ## Testing
 

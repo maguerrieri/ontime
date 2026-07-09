@@ -24,29 +24,31 @@
 
 ## File structure
 
-| File | Responsibility | Task |
-|------|----------------|------|
-| `apps/client/src/features/control/playback/playbackControl.utils.ts` | pure `canAddTimeInState` helper + `disableAddTime` | 1 |
-| `apps/client/src/features/control/playback/__tests__/playbackControl.utils.test.ts` | tests for the helper | 1 |
-| `apps/client/src/features/control/playback/add-time/AddTime.tsx` | enable buttons in running Roll via helper | 2 |
-| `apps/client/src/features/control/playback/PlaybackControl.tsx` | pass `timerPhase` to `AddTime` | 2 |
-| `apps/client/src/common/stores/editorSettings.ts` | `showScheduledEnd` preference | 3 |
-| `apps/client/src/common/stores/__tests__/editorSettings.test.ts` | test the setter/persistence | 3 |
-| `apps/client/src/common/hooks/useSocket.ts` | `useSelectedEventScheduledEnd` selector | 4 |
-| `apps/client/src/features/control/playback/playback-timer/PlaybackTimer.tsx` | relabel + scheduled line + toggle | 4 |
-| `apps/client/src/features/app-settings/panel/feature-panel/reportSettings.utils.ts` | `projectedEnd` in `CombinedReport` + CSV | 5 |
-| `apps/client/src/features/app-settings/panel/feature-panel/__tests__/reportSettings.utils.test.ts` | tests for projected end | 5 |
-| `apps/client/src/features/app-settings/panel/feature-panel/ReportSettings.tsx` | wire live projected end + render column | 6 |
+| File                                                                                               | Responsibility                                     | Task |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---- |
+| `apps/client/src/features/control/playback/playbackControl.utils.ts`                               | pure `canAddTimeInState` helper + `disableAddTime` | 1    |
+| `apps/client/src/features/control/playback/__tests__/playbackControl.utils.test.ts`                | tests for the helper                               | 1    |
+| `apps/client/src/features/control/playback/add-time/AddTime.tsx`                                   | enable buttons in running Roll via helper          | 2    |
+| `apps/client/src/features/control/playback/PlaybackControl.tsx`                                    | pass `timerPhase` to `AddTime`                     | 2    |
+| `apps/client/src/common/stores/editorSettings.ts`                                                  | `showScheduledEnd` preference                      | 3    |
+| `apps/client/src/common/stores/__tests__/editorSettings.test.ts`                                   | test the setter/persistence                        | 3    |
+| `apps/client/src/common/hooks/useSocket.ts`                                                        | `useSelectedEventScheduledEnd` selector            | 4    |
+| `apps/client/src/features/control/playback/playback-timer/PlaybackTimer.tsx`                       | relabel + scheduled line + toggle                  | 4    |
+| `apps/client/src/features/app-settings/panel/feature-panel/reportSettings.utils.ts`                | `projectedEnd` in `CombinedReport` + CSV           | 5    |
+| `apps/client/src/features/app-settings/panel/feature-panel/__tests__/reportSettings.utils.test.ts` | tests for projected end                            | 5    |
+| `apps/client/src/features/app-settings/panel/feature-panel/ReportSettings.tsx`                     | wire live projected end + render column            | 6    |
 
 ---
 
 ## Task 1: `canAddTimeInState` helper + `disableAddTime`
 
 **Files:**
+
 - Modify: `apps/client/src/features/control/playback/playbackControl.utils.ts`
 - Test: `apps/client/src/features/control/playback/__tests__/playbackControl.utils.test.ts` (create)
 
 **Interfaces:**
+
 - Produces: `canAddTimeInState(playback: Playback, phase: TimerPhase): boolean` — `true` for Play and Pause always; `true` for Roll only when `phase !== TimerPhase.Pending`; `false` otherwise. Used by Task 2 (`AddTime.tsx`) and by `disableAddTime` here.
 
 - [ ] **Step 1: Write the failing test**
@@ -156,10 +158,12 @@ MSG
 ## Task 2: Enable the add-time buttons in Roll (UI wiring)
 
 **Files:**
+
 - Modify: `apps/client/src/features/control/playback/add-time/AddTime.tsx`
 - Modify: `apps/client/src/features/control/playback/PlaybackControl.tsx`
 
 **Interfaces:**
+
 - Consumes: `canAddTimeInState(playback, phase)` from Task 1; `TimerPhase` from `ontime-types`; `usePlaybackControl().timerPhase` (already provided by the selector).
 - Produces: `AddTime` now accepts `{ playback: Playback; timerPhase: TimerPhase }`.
 
@@ -192,7 +196,7 @@ export default function AddTime(props: AddTimeProps) {
 Then replace the `canAddTime` line inside the component:
 
 ```tsx
-  const canAddTime = canAddTimeInState(playback, timerPhase);
+const canAddTime = canAddTimeInState(playback, timerPhase);
 ```
 
 (Leave `doDisableButtons = !canAddTime || timeInMs === 0;` and the rest unchanged.)
@@ -202,7 +206,7 @@ Then replace the `canAddTime` line inside the component:
 In `apps/client/src/features/control/playback/PlaybackControl.tsx`, update the `AddTime` usage (line ~15):
 
 ```tsx
-        <AddTime playback={data.playback} timerPhase={data.timerPhase} />
+<AddTime playback={data.playback} timerPhase={data.timerPhase} />
 ```
 
 - [ ] **Step 3: Typecheck**
@@ -235,10 +239,12 @@ MSG
 ## Task 3: `showScheduledEnd` preference in `editorSettings`
 
 **Files:**
+
 - Modify: `apps/client/src/common/stores/editorSettings.ts`
 - Test: `apps/client/src/common/stores/__tests__/editorSettings.test.ts` (create)
 
 **Interfaces:**
+
 - Produces: `useEditorSettings` store gains `showScheduledEnd: boolean` (default `false`) and `setShowScheduledEnd: (value: boolean) => void`, persisted to `localStorage` under key `ontime-show-scheduled-end`.
 
 - [ ] **Step 1: Write the failing test**
@@ -277,7 +283,7 @@ In `apps/client/src/common/stores/editorSettings.ts`:
 Add to the `EditorSettingsStore` type (after `inheritGroupColour: boolean;`):
 
 ```ts
-  showScheduledEnd: boolean;
+showScheduledEnd: boolean;
 ```
 
 Add to the same type's setter group (after `setDefaultEndAction: ...;`):
@@ -343,10 +349,12 @@ MSG
 ## Task 4: Main timer — Projected/Scheduled end + toggle
 
 **Files:**
+
 - Modify: `apps/client/src/common/hooks/useSocket.ts` (add selector)
 - Modify: `apps/client/src/features/control/playback/playback-timer/PlaybackTimer.tsx`
 
 **Interfaces:**
+
 - Consumes: `useEditorSettings().showScheduledEnd` + `setShowScheduledEnd` (Task 3); `timer.expectedFinish` from `useTimer()`.
 - Produces: `useSelectedEventScheduledEnd(): MaybeNumber` selector = `state.eventNow?.timeEnd ?? null`.
 
@@ -375,51 +383,47 @@ import TapButton from '../tap-button/TapButton';
 In the `PlaybackTimer` component body, after `const timer = useTimer();`, add:
 
 ```tsx
-  const scheduledEnd = useSelectedEventScheduledEnd();
-  const showScheduledEnd = useEditorSettings((state) => state.showScheduledEnd);
-  const setShowScheduledEnd = useEditorSettings((state) => state.setShowScheduledEnd);
+const scheduledEnd = useSelectedEventScheduledEnd();
+const showScheduledEnd = useEditorSettings((state) => state.showScheduledEnd);
+const setShowScheduledEnd = useEditorSettings((state) => state.setShowScheduledEnd);
 ```
 
 Replace the `.status` block so it passes the new props and renders the toggle. Replace:
 
 ```tsx
-      <div className={style.status}>
-        {isWaiting ? (
-          <span className={style.rolltag}>Roll: Countdown to start</span>
-        ) : (
-          <RunningStatus startedAt={timer.startedAt} expectedFinish={timer.expectedFinish} playback={timer.playback} />
-        )}
-      </div>
+<div className={style.status}>
+  {isWaiting ? (
+    <span className={style.rolltag}>Roll: Countdown to start</span>
+  ) : (
+    <RunningStatus startedAt={timer.startedAt} expectedFinish={timer.expectedFinish} playback={timer.playback} />
+  )}
+</div>
 ```
 
 with:
 
 ```tsx
-      <div className={style.status}>
-        {isWaiting ? (
-          <span className={style.rolltag}>Roll: Countdown to start</span>
-        ) : (
-          <RunningStatus
-            startedAt={timer.startedAt}
-            expectedFinish={timer.expectedFinish}
-            playback={timer.playback}
-            scheduledEnd={scheduledEnd}
-            showScheduledEnd={showScheduledEnd}
-          />
-        )}
-        <TapButton
-          onClick={() => setShowScheduledEnd(!showScheduledEnd)}
-          active={showScheduledEnd}
-          aspect='tight'
-          className={style.scheduledEndToggle}
-        >
-          {showScheduledEnd ? (
-            <IoEyeOutline title='Hide scheduled end' />
-          ) : (
-            <IoEyeOffOutline title='Show scheduled end' />
-          )}
-        </TapButton>
-      </div>
+<div className={style.status}>
+  {isWaiting ? (
+    <span className={style.rolltag}>Roll: Countdown to start</span>
+  ) : (
+    <RunningStatus
+      startedAt={timer.startedAt}
+      expectedFinish={timer.expectedFinish}
+      playback={timer.playback}
+      scheduledEnd={scheduledEnd}
+      showScheduledEnd={showScheduledEnd}
+    />
+  )}
+  <TapButton
+    onClick={() => setShowScheduledEnd(!showScheduledEnd)}
+    active={showScheduledEnd}
+    aspect='tight'
+    className={style.scheduledEndToggle}
+  >
+    {showScheduledEnd ? <IoEyeOutline title='Hide scheduled end' /> : <IoEyeOffOutline title='Show scheduled end' />}
+  </TapButton>
+</div>
 ```
 
 Update `RunningStatusProps` and the `RunningStatus` component. Replace the interface:
@@ -512,10 +516,12 @@ MSG
 ## Task 5: Report util — `projectedEnd` in `CombinedReport` + CSV
 
 **Files:**
+
 - Modify: `apps/client/src/features/app-settings/panel/feature-panel/reportSettings.utils.ts`
 - Test: `apps/client/src/features/app-settings/panel/feature-panel/__tests__/reportSettings.utils.test.ts` (create)
 
 **Interfaces:**
+
 - Produces:
   - `CombinedReport` gains `projectedEnd: MaybeNumber`.
   - `getCombinedReport(report, rundown, flatOrder, running)` — new 4th param `running: { id: EntryId; expectedFinish: MaybeNumber } | null`. For the row whose `id === running.id`, `projectedEnd = running.expectedFinish`; otherwise `null`.
@@ -623,7 +629,7 @@ export function getCombinedReport(
 In the loop, compute the projected end once per entry and include it in **both** push branches:
 
 ```ts
-    const projectedEnd = running?.id === id ? running.expectedFinish : null;
+const projectedEnd = running?.id === id ? running.expectedFinish : null;
 ```
 
 - In the `!(id in report)` branch object add `projectedEnd,` (alongside the other fields).
@@ -632,22 +638,31 @@ In the loop, compute the projected end once per entry and include it in **both**
 Update the CSV header and row builder:
 
 ```ts
-const csvHeader = ['Index', 'Title', 'Cue', 'Scheduled Start', 'Actual Start', 'Scheduled End', 'Projected End', 'Actual End'];
+const csvHeader = [
+  'Index',
+  'Title',
+  'Cue',
+  'Scheduled Start',
+  'Actual Start',
+  'Scheduled End',
+  'Projected End',
+  'Actual End',
+];
 ```
 
 In `makeReportCSV`, insert the projected-end cell after `formatTime(entry.scheduledEnd)`:
 
 ```ts
-    csv.push([
-      String(entry.index),
-      entry.title,
-      entry.cue,
-      formatTime(entry.scheduledStart),
-      formatTime(entry.actualStart),
-      formatTime(entry.scheduledEnd),
-      formatTime(entry.projectedEnd),
-      formatTime(entry.actualEnd),
-    ]);
+csv.push([
+  String(entry.index),
+  entry.title,
+  entry.cue,
+  formatTime(entry.scheduledStart),
+  formatTime(entry.actualStart),
+  formatTime(entry.scheduledEnd),
+  formatTime(entry.projectedEnd),
+  formatTime(entry.actualEnd),
+]);
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -676,9 +691,11 @@ MSG
 ## Task 6: Report view — wire live projected end + render column
 
 **Files:**
+
 - Modify: `apps/client/src/features/app-settings/panel/feature-panel/ReportSettings.tsx`
 
 **Interfaces:**
+
 - Consumes: `getCombinedReport(..., running)` (Task 5); `useSelectedEventId()` and `useTimer()` from `useSocket`; `Playback` from `ontime-types`.
 
 - [ ] **Step 1: Feed live runtime into the combined report**
@@ -696,20 +713,20 @@ import { useSelectedEventId, useTimer } from '../../../../common/hooks/useSocket
 In the component, after `const { data } = useRundown();`:
 
 ```tsx
-  const selectedEventId = useSelectedEventId();
-  const timer = useTimer();
-  const running =
-    selectedEventId !== null && timer.playback !== Playback.Stop
-      ? { id: selectedEventId, expectedFinish: timer.expectedFinish }
-      : null;
+const selectedEventId = useSelectedEventId();
+const timer = useTimer();
+const running =
+  selectedEventId !== null && timer.playback !== Playback.Stop
+    ? { id: selectedEventId, expectedFinish: timer.expectedFinish }
+    : null;
 ```
 
 Update the memo to pass `running` (and add it to the deps):
 
 ```tsx
-  const combinedReport = useMemo(() => {
-    return getCombinedReport(reportData, data.entries, data.flatOrder, running);
-  }, [reportData, data.entries, data.flatOrder, running]);
+const combinedReport = useMemo(() => {
+  return getCombinedReport(reportData, data.entries, data.flatOrder, running);
+}, [reportData, data.entries, data.flatOrder, running]);
 ```
 
 - [ ] **Step 2: Render the Projected End column**
@@ -717,13 +734,13 @@ Update the memo to pass `running` (and add it to the deps):
 Add a header cell after the `Scheduled End` `<th>`:
 
 ```tsx
-                <th>Projected End</th>
+<th>Projected End</th>
 ```
 
 Add the matching body cell after the scheduled-end `<th>` in the row (before the actual-end cell):
 
 ```tsx
-                    <th>{formatTime(entry.projectedEnd)}</th>
+<th>{formatTime(entry.projectedEnd)}</th>
 ```
 
 - [ ] **Step 3: Typecheck**
