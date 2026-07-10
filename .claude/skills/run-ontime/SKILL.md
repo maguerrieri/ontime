@@ -33,8 +33,9 @@ Start the server with a pinned port and throwaway data dir — otherwise it read
 ```bash
 mkdir -p /tmp/ontime-data
 (cd apps/server && ONTIME_DATA=/tmp/ontime-data PORT=4001 pnpm dev) &   # background terminal
+SERVER_PID=$!   # keep this to stop the server later
 # ready when the log prints "Ontime is listening on port 4001"
-curl -s localhost:4001/api/version   # {"payload":"4.10.0"}
+curl -s localhost:4001/api/version   # {"payload":"<repo version>"}
 ```
 
 A fresh `ONTIME_DATA` dir is auto-seeded with a demo project (6-event rundown), so there is always something to play.
@@ -53,7 +54,7 @@ Useful API endpoints (all GET, JSON `{payload: ...}`):
 - `/api/start/index/1` (1-based), `/api/start/next`, `/api/pause`, `/api/stop`
 - `/data/settings`, `/data/db` (project data)
 
-Stop cleanly: kill the `pnpm dev` process (`pkill -f "tsx watch"`).
+Stop cleanly: Ctrl-C in the server's terminal, or `kill $SERVER_PID` if you backgrounded it as above (avoid broad patterns like `pkill -f "tsx watch"` — they can hit unrelated processes).
 
 ## Run (human path)
 
@@ -70,7 +71,7 @@ pnpm e2e    # builds ontime-ui, then Playwright vs the server on :4001 (57 tests
 
 - **`pnpm e2e` reuses an existing server on 4001** (`reuseExistingServer: true` in `playwright.config.ts`). If your own dev server is already on 4001, the e2e suite runs against _it_ — your data dir, your state. Stop your server first for a clean run.
 - **Port precedence:** `PORT` env > stored app state > default 4001 (`apps/server/src/classes/port-manager/PortManager.ts`). Without `ONTIME_DATA`+`PORT`, you inherit the local operator's install state.
-- **UI routes 301 to trailing slash** (`/timer` → `/timer/`); follow redirects when curling views.
+- **UI routes 301 to trailing slash** (`/timer` → `/timer/`) — only visible when curling raw (`curl -L` or use the trailing slash); browsers and Playwright follow it transparently, so e2e specs use `/timer` unchanged.
 - **Editor shows a "Welcome to Ontime" modal** on first load of a fresh data dir — screenshots of `/editor` will have it in front. Other views (timer, clock…) are unaffected.
 - **`DEVELOPMENT.md` is stale:** it references `pnpm build:local` and `pnpm dev:server`, which don't exist in the root `package.json`. Use `pnpm build` and `(cd apps/server && pnpm dev)`.
 
