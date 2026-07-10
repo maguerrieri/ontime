@@ -1,6 +1,6 @@
 ---
 name: run-ontime
-description: Build, run, and drive ontime (event timer web app). Use when asked to start ontime, run the dev server, run unit or e2e tests, take a screenshot of a view (timer, editor, clock), or exercise the playback API.
+description: Build, run, and drive ontime (event timer web app). Use when asked to start ontime, run the dev server, run unit or e2e tests, take a screenshot of a view (timer, editor, backstage), or exercise the playback API.
 ---
 
 Ontime is a pnpm/turbo monorepo: a Node server (`apps/server`, Express + tsx) that serves the built React UI (`apps/client`) and a REST/WebSocket API. An agent drives the **running server over HTTP** — playback via `/api/*`, screenshots via `.claude/skills/run-ontime/driver.mjs` (Playwright, already a repo dependency). No Electron needed for development.
@@ -50,7 +50,7 @@ Then drive it with the driver:
 ```bash
 node .claude/skills/run-ontime/driver.mjs smoke            # version + start/pause/stop round-trip, asserts state
 node .claude/skills/run-ontime/driver.mjs poll             # dump runtime state JSON
-node .claude/skills/run-ontime/driver.mjs ss timer t.png   # screenshot a view: timer, editor, clock, backstage, cuesheet, op
+node .claude/skills/run-ontime/driver.mjs ss timer t.png   # views: timer, countdown, backstage, studio, timeline, info, editor, cuesheet, op
 ```
 
 Useful API endpoints (all GET, JSON `{payload: ...}`):
@@ -69,7 +69,7 @@ Stop cleanly: Ctrl-C in the server's terminal, or if backgrounded, kill the actu
 
 ```bash
 pnpm test   # turbo test:pipeline — vitest in client, server, utils (~seconds when cached)
-pnpm e2e    # builds ontime-ui, then Playwright vs the server on :4001 (57 tests, ~3 min)
+pnpm e2e    # builds ontime-ui, then Playwright vs the server on :4001 (~60 tests, ~3 min)
 ```
 
 ## Gotchas
