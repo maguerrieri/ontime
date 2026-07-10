@@ -1,6 +1,6 @@
-import { OntimeReport, RundownEntries, SupportedEntry } from 'ontime-types';
+import { OntimeReport, Playback, RundownEntries, SupportedEntry, TimerPhase } from 'ontime-types';
 
-import { getCombinedReport, makeReportCSV } from '../reportSettings.utils';
+import { getCombinedReport, isTimerActivelyRunning, makeReportCSV, overlayProjectedEnd } from '../reportSettings.utils';
 
 function makeEvent(id: string, cue: string, timeStart: number, timeEnd: number) {
   return {
@@ -35,6 +35,34 @@ describe('getCombinedReport() projectedEnd', () => {
   test('projectedEnd is null for all rows when nothing is running', () => {
     const combined = getCombinedReport(report, rundown, flatOrder, null);
     expect(combined.every((r) => r.projectedEnd === null)).toBe(true);
+  });
+});
+
+describe('overlayProjectedEnd()', () => {
+  test('overlays the running row and leaves the rest untouched', () => {
+    const staticReport = getCombinedReport(report, rundown, flatOrder, null);
+    const overlaid = overlayProjectedEnd(staticReport, { id: 'b', expectedFinish: 1500000 });
+    expect(overlaid.find((r) => r.id === 'a')?.projectedEnd).toBeNull();
+    expect(overlaid.find((r) => r.id === 'b')?.projectedEnd).toBe(1500000);
+  });
+
+  test('returns the report unchanged when nothing is running', () => {
+    const staticReport = getCombinedReport(report, rundown, flatOrder, null);
+    expect(overlayProjectedEnd(staticReport, null)).toBe(staticReport);
+  });
+});
+
+describe('isTimerActivelyRunning()', () => {
+  test('true while Play, Pause and actively rolling', () => {
+    expect(isTimerActivelyRunning(Playback.Play, TimerPhase.Default)).toBe(true);
+    expect(isTimerActivelyRunning(Playback.Pause, TimerPhase.Default)).toBe(true);
+    expect(isTimerActivelyRunning(Playback.Roll, TimerPhase.Default)).toBe(true);
+    expect(isTimerActivelyRunning(Playback.Roll, TimerPhase.Overtime)).toBe(true);
+  });
+
+  test('false when stopped or waiting to roll', () => {
+    expect(isTimerActivelyRunning(Playback.Stop, TimerPhase.None)).toBe(false);
+    expect(isTimerActivelyRunning(Playback.Roll, TimerPhase.Pending)).toBe(false);
   });
 });
 

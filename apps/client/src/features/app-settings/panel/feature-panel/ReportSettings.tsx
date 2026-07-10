@@ -1,5 +1,3 @@
-import { TimerPhase } from 'ontime-types';
-import { isPlaybackActive } from 'ontime-utils';
 import { useMemo } from 'react';
 import { IoTrashBin } from 'react-icons/io5';
 
@@ -12,7 +10,13 @@ import { useSelectedEventId, useTimer } from '../../../../common/hooks/useSocket
 import { cx } from '../../../../common/utils/styleUtils';
 import { formatTime } from '../../../../common/utils/time';
 import * as Panel from '../../panel-utils/PanelUtils';
-import { CombinedReport, getCombinedReport, makeReportCSV } from './reportSettings.utils';
+import {
+  CombinedReport,
+  getCombinedReport,
+  isTimerActivelyRunning,
+  makeReportCSV,
+  overlayProjectedEnd,
+} from './reportSettings.utils';
 
 import style from './ReportSettings.module.scss';
 
@@ -21,7 +25,7 @@ export default function ReportSettings() {
   const { data } = useRundown();
   const selectedEventId = useSelectedEventId();
   const timer = useTimer();
-  const isRunning = selectedEventId !== null && isPlaybackActive(timer.playback) && timer.phase !== TimerPhase.Pending;
+  const isRunning = selectedEventId !== null && isTimerActivelyRunning(timer.playback, timer.phase);
   const expectedFinish = timer.expectedFinish;
 
   const clearReport = async () => await deleteAllReport();
@@ -42,12 +46,8 @@ export default function ReportSettings() {
   );
 
   const combinedReport = useMemo(() => {
-    if (!isRunning || selectedEventId === null) {
-      return staticReport;
-    }
-    return staticReport.map((entry) =>
-      entry.id === selectedEventId ? { ...entry, projectedEnd: expectedFinish } : entry,
-    );
+    const running = isRunning && selectedEventId !== null ? { id: selectedEventId, expectedFinish } : null;
+    return overlayProjectedEnd(staticReport, running);
   }, [staticReport, isRunning, selectedEventId, expectedFinish]);
 
   return (
