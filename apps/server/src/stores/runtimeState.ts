@@ -408,6 +408,7 @@ export function updateAll(rundown: Rundown, metadata: RundownMetadata) {
    * a running roll timer is deliberately left alone - we never interrupt a live timer
    */
   if (runtimeState.timer.playback === Playback.Roll && runtimeState.timer.secondaryTimer !== null) {
+    // the pending tick path uses the opposite offset sign, see #10
     const offsetClock = runtimeState.clock - runtimeState.offset.absolute;
     const { index } = loadRoll(rundown, metadata, offsetClock);
 
