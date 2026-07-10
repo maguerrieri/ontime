@@ -62,9 +62,19 @@
 
 .status {
   grid-area: status;
-  height: 1.5rem;
+  min-height: 1.5rem;
   display: flex;
-  gap: $section-spacing;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: $section-spacing;
+  row-gap: 0.25rem;
+}
+
+.start,
+.finish {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
 }
 
 .tag {
