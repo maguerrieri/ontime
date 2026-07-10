@@ -411,11 +411,11 @@ export function updateAll(rundown: Rundown, metadata: RundownMetadata) {
     const offsetClock = runtimeState.clock - runtimeState.offset.absolute;
     const { index } = loadRoll(rundown, metadata, offsetClock);
 
-    loadNow(rundown, metadata, index ?? undefined);
-    loadNext(rundown, metadata, index ?? undefined);
+    loadNow(rundown, metadata, index);
+    loadNext(rundown, metadata, index);
     // updateLoaded recalculates the secondary target and queues a start if the event is now
     updateLoaded(runtimeState.eventNow ?? undefined);
-    loadGroupFlagAndEnd(rundown, metadata, index ?? -1);
+    loadGroupFlagAndEnd(rundown, metadata, index);
     return;
   }
 
