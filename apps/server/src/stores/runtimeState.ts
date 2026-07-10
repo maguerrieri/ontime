@@ -433,6 +433,7 @@ export function updateAll(rundown: Rundown, metadata: RundownMetadata) {
         runtimeState.timer.elapsed = null;
         runtimeState._timer.pausedAt = null;
         runtimeState._timer.hasFinished = false;
+        runtimeState._timer.forceFinish = null;
         // placeholder so the timer reads as waiting to roll, recalculated in updateLoaded
         runtimeState.timer.secondaryTimer = 0;
       }
