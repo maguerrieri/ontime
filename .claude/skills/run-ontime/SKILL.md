@@ -68,7 +68,7 @@ pnpm e2e    # builds ontime-ui, then Playwright vs the server on :4001 (57 tests
 
 ## Gotchas
 
-- **`pnpm e2e` reuses an existing server on 4001** (`reuseExistingServer: true` in `playwright.config.ts`). If your own dev server is already on 4001, the e2e suite runs against *it* — your data dir, your state. Stop your server first for a clean run.
+- **`pnpm e2e` reuses an existing server on 4001** (`reuseExistingServer: true` in `playwright.config.ts`). If your own dev server is already on 4001, the e2e suite runs against _it_ — your data dir, your state. Stop your server first for a clean run.
 - **Port precedence:** `PORT` env > stored app state > default 4001 (`apps/server/src/classes/port-manager/PortManager.ts`). Without `ONTIME_DATA`+`PORT`, you inherit the local operator's install state.
 - **UI routes 301 to trailing slash** (`/timer` → `/timer/`); follow redirects when curling views.
 - **Editor shows a "Welcome to Ontime" modal** on first load of a fresh data dir — screenshots of `/editor` will have it in front. Other views (timer, clock…) are unaffected.
