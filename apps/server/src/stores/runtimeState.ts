@@ -361,7 +361,8 @@ export function updateLoaded(event?: PlayableEvent): string | undefined {
     if (runtimeState.timer.playback === Playback.Roll) {
       const offsetClock = runtimeState.clock - runtimeState.offset.absolute;
       // if waiting to roll, we update the targets and potentially start the timer
-      if (runtimeState._timer.secondaryTarget !== null) {
+      // we check the secondary timer, as the tick does: the target is not cleared when a pending roll goes live
+      if (runtimeState.timer.secondaryTimer !== null) {
         if (runtimeState.eventNow.timeStart < offsetClock && offsetClock < runtimeState.eventNow.timeEnd) {
           // if the event is now, we queue a start
           runtimeState._timer.secondaryTarget = runtimeState.eventNow.timeStart as TimeOfDay;
@@ -406,7 +407,7 @@ export function updateAll(rundown: Rundown, metadata: RundownMetadata) {
    * so we re-run the roll selection against the clock instead of keeping the pinned event
    * a running roll timer is deliberately left alone - we never interrupt a live timer
    */
-  if (runtimeState.timer.playback === Playback.Roll && runtimeState._timer.secondaryTarget !== null) {
+  if (runtimeState.timer.playback === Playback.Roll && runtimeState.timer.secondaryTimer !== null) {
     const offsetClock = runtimeState.clock - runtimeState.offset.absolute;
     const { index } = loadRoll(rundown, metadata, offsetClock);
 
