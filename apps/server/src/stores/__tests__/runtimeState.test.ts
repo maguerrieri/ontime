@@ -871,6 +871,53 @@ describe('roll mode', () => {
     });
   });
 
+  describe('rundown change while waiting to roll (deletion)', () => {
+    test('deleting the pending event retargets the roll to the remaining event', async () => {
+      const mockRundown = makeRundown({
+        entries: {
+          1: {
+            ...mockEvent,
+            id: '1',
+            timeStart: 1 * MILLIS_PER_HOUR, // 01:00
+            timeEnd: 2 * MILLIS_PER_HOUR, // 02:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+          2: {
+            ...mockEvent,
+            id: '2',
+            timeStart: 3 * MILLIS_PER_HOUR, // 03:00
+            timeEnd: 4 * MILLIS_PER_HOUR, // 04:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+        },
+        order: ['1', '2'],
+      });
+
+      await initRundown(mockRundown, {});
+      vi.runAllTimers();
+
+      // start roll at 00:30, event 1 is pending for 01:00
+      vi.setSystemTime('jan 1 00:30');
+      const { rundown, metadata } = rundownCache.get();
+      const result = roll(rundown, metadata);
+      expect(result.eventId).toBe('1');
+      expect(result.didStart).toBe(false);
+
+      // delete event 1 and hot-reload
+      const edited = makeRundown({ entries: { 2: mockRundown.entries['2'] }, order: ['2'] });
+      const processed = processRundown(edited, {});
+      updateAll({ ...edited, entries: processed.entries }, processed);
+
+      // the roll should retarget to event 2, the only remaining event
+      const state = getState();
+      expect(state.eventNow?.id).toBe('2');
+      expect(state.timer.phase).toBe(TimerPhase.Pending);
+      expect(state.timer.secondaryTimer).toBe(2 * MILLIS_PER_HOUR + 30 * MILLIS_PER_MINUTE);
+    });
+  });
+
   describe('rundown change while rolling a live event', () => {
     test('reordering events while a roll timer runs does not interrupt it', async () => {
       const mockRundown = makeRundown({
