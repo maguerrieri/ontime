@@ -17,9 +17,9 @@ const BASE = `http://localhost:${PORT}`;
 
 async function api(path) {
   const res = await fetch(`${BASE}${path}`);
-  const body = await res.json();
-  if (!res.ok) throw new Error(`${path} -> ${res.status}: ${JSON.stringify(body)}`);
-  return body;
+  const text = await res.text();
+  if (!res.ok) throw new Error(`${path} -> ${res.status}: ${text}`);
+  return JSON.parse(text);
 }
 
 async function smoke() {
@@ -38,11 +38,15 @@ async function smoke() {
 
 async function screenshot(view = 'timer', out = `ontime-${view}.png`) {
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-  await page.goto(`${BASE}/${view}`, { waitUntil: 'networkidle' });
-  await page.screenshot({ path: out });
-  await browser.close();
-  console.log(`saved ${out}`);
+  try {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    // networkidle ignores the app's WebSocket, so it settles fine (verified live)
+    await page.goto(`${BASE}/${view}`, { waitUntil: 'networkidle' });
+    await page.screenshot({ path: out });
+    console.log(`saved ${out}`);
+  } finally {
+    await browser.close();
+  }
 }
 
 const [cmd = 'smoke', ...args] = process.argv.slice(2);
