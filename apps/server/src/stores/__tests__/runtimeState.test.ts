@@ -957,7 +957,7 @@ describe('roll mode', () => {
       expect(result).toStrictEqual({ eventId: '1', didStart: true });
       const startedAt = getState().timer.startedAt;
 
-      // reorder while live: the running timer must be left alone
+      // reorder while live: the live event's window still covers the clock, so the timer is left alone
       const reordered = makeRundown({ entries: mockRundown.entries, order: ['2', '1'] });
       const processed = processRundown(reordered, {});
       updateAll({ ...reordered, entries: processed.entries }, processed);
@@ -966,6 +966,110 @@ describe('roll mode', () => {
       expect(state.eventNow?.id).toBe('1');
       expect(state.timer.startedAt).toBe(startedAt);
       expect(state.timer.secondaryTimer).toBeNull();
+      expect(update().hasSecondaryTimerFinished).toBe(false);
+    });
+
+    test('a change that puts a different event window over the clock switches the live roll', async () => {
+      const mockRundown = makeRundown({
+        entries: {
+          1: {
+            ...mockEvent,
+            id: '1',
+            timeStart: 1 * MILLIS_PER_HOUR, // 01:00
+            timeEnd: 2 * MILLIS_PER_HOUR, // 02:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+          2: {
+            ...mockEvent,
+            id: '2',
+            timeStart: 2 * MILLIS_PER_HOUR, // 02:00
+            timeEnd: 3 * MILLIS_PER_HOUR, // 03:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+        },
+        order: ['1', '2'],
+      });
+
+      await initRundown(mockRundown, {});
+      vi.runAllTimers();
+
+      // event 1 is live in roll at 01:10
+      vi.setSystemTime('jan 1 01:10');
+      const { rundown, metadata } = rundownCache.get();
+      const result = roll(rundown, metadata);
+      expect(result).toStrictEqual({ eventId: '1', didStart: true });
+      const previousAddedTime = 5 * MILLIS_PER_MINUTE;
+      addTime(previousAddedTime);
+
+      // the operator drags event 2 into place and the times reflow:
+      // event 2 now covers the clock and event 1 moves into the future
+      const reflowed = makeRundown({
+        entries: {
+          1: { ...mockRundown.entries[1], timeStart: 2 * MILLIS_PER_HOUR, timeEnd: 3 * MILLIS_PER_HOUR },
+          2: { ...mockRundown.entries[2], timeStart: 1 * MILLIS_PER_HOUR, timeEnd: 2 * MILLIS_PER_HOUR },
+        },
+        order: ['2', '1'],
+      });
+      const processed = processRundown(reflowed, {});
+      updateAll({ ...reflowed, entries: processed.entries }, processed);
+
+      // event 2 becomes the roll target with an elapsed secondary timer, queueing a start
+      const state = getState();
+      expect(state.eventNow?.id).toBe('2');
+      expect(state.timer.phase).toBe(TimerPhase.Pending);
+      expect(state.timer.startedAt).toBeNull();
+      expect(state.timer.addedTime).toBe(0);
+      expect(state.timer.secondaryTimer).not.toBeNull();
+      expect(state.timer.secondaryTimer!).toBeLessThanOrEqual(0);
+      expect(update().hasSecondaryTimerFinished).toBe(true);
+
+      // the service reacts to the finished secondary timer by rolling the loaded event
+      const startResult = roll({ ...reflowed, entries: processed.entries }, processed, getState().offset);
+      expect(startResult).toStrictEqual({ eventId: '2', didStart: true });
+    });
+
+    test('a change that moves the live event window into the future drops the roll to pending', async () => {
+      const mockRundown = makeRundown({
+        entries: {
+          1: {
+            ...mockEvent,
+            id: '1',
+            timeStart: 1 * MILLIS_PER_HOUR, // 01:00
+            timeEnd: 2 * MILLIS_PER_HOUR, // 02:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+        },
+        order: ['1'],
+      });
+
+      await initRundown(mockRundown, {});
+      vi.runAllTimers();
+
+      // event 1 is live in roll at 01:10
+      vi.setSystemTime('jan 1 01:10');
+      const { rundown, metadata } = rundownCache.get();
+      const result = roll(rundown, metadata);
+      expect(result).toStrictEqual({ eventId: '1', didStart: true });
+
+      // the live event is pushed into the future, its window no longer covers the clock
+      const reflowed = makeRundown({
+        entries: {
+          1: { ...mockRundown.entries[1], timeStart: 1.5 * MILLIS_PER_HOUR, timeEnd: 2.5 * MILLIS_PER_HOUR },
+        },
+        order: ['1'],
+      });
+      const processed = processRundown(reflowed, {});
+      updateAll({ ...reflowed, entries: processed.entries }, processed);
+
+      // the roll drops to pending, counting down to the event's new start
+      const state = getState();
+      expect(state.eventNow?.id).toBe('1');
+      expect(state.timer.phase).toBe(TimerPhase.Pending);
+      expect(state.timer.startedAt).toBeNull();
+      expect(state.timer.secondaryTimer).toBe(20 * MILLIS_PER_MINUTE);
       expect(update().hasSecondaryTimerFinished).toBe(false);
     });
   });

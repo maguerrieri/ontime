@@ -399,25 +399,50 @@ export function updateLoaded(event?: PlayableEvent): string | undefined {
 
 /**
  * Used in situations when we want to hot-reload all events without interrupting timer
- * if we are in roll mode waiting for an event, the roll target is re-selected against the clock
+ * if we are in roll mode, the roll target is re-selected against the clock
  */
 export function updateAll(rundown: Rundown, metadata: RundownMetadata) {
   /**
-   * if we are waiting to roll, the change may mean a different event should be the roll target
-   * so we re-run the roll selection against the clock instead of keeping the pinned event
-   * a running roll timer is deliberately left alone - we never interrupt a live timer
+   * in roll mode, the change may mean a different event should be the roll target
+   * - waiting to roll: we always re-run the roll selection instead of keeping the pinned event
+   * - live: we only interrupt the running timer if its window no longer covers the clock,
+   *   or another event's window now does - a live event that is still current is left alone
    */
-  if (runtimeState.timer.playback === Playback.Roll && runtimeState.timer.secondaryTimer !== null) {
+  if (runtimeState.timer.playback === Playback.Roll) {
     // the pending tick path uses the opposite offset sign, see #10
     const offsetClock = runtimeState.clock - runtimeState.offset.absolute;
-    const { index } = loadRoll(rundown, metadata, offsetClock);
+    const isWaitingToRoll = runtimeState.timer.secondaryTimer !== null;
+    const { event, index, isPending } = loadRoll(rundown, metadata, offsetClock);
 
-    loadNow(rundown, metadata, index);
-    loadNext(rundown, metadata, index);
-    // updateLoaded recalculates the secondary target and queues a start if the event is now
-    updateLoaded(runtimeState.eventNow ?? undefined);
-    loadGroupFlagAndEnd(rundown, metadata, index);
-    return;
+    // we check the incoming rundown's copy of the live event, the loaded one may hold stale times
+    const currentEntry = runtimeState.eventNow === null ? undefined : rundown.entries[runtimeState.eventNow.id];
+    const liveEventIsStillNow =
+      currentEntry !== undefined &&
+      isOntimeEvent(currentEntry) &&
+      !currentEntry.skip &&
+      checkIsNow(currentEntry.timeStart, currentEntry.timeEnd, offsetClock);
+    const selectionIsNow = event !== null && !isPending && event.id !== runtimeState.eventNow?.id;
+    const shouldRetargetLive = event !== null && (!liveEventIsStillNow || selectionIsNow);
+
+    if (isWaitingToRoll || shouldRetargetLive) {
+      if (!isWaitingToRoll) {
+        // drop the live timer back to a pending roll targeting the new selection
+        runtimeState.timer.phase = TimerPhase.Pending;
+        runtimeState.timer.startedAt = null;
+        runtimeState.timer.addedTime = 0;
+        runtimeState.timer.elapsed = null;
+        runtimeState._timer.pausedAt = null;
+        runtimeState._timer.hasFinished = false;
+        // placeholder so the timer reads as waiting to roll, recalculated in updateLoaded
+        runtimeState.timer.secondaryTimer = 0;
+      }
+      loadNow(rundown, metadata, index);
+      loadNext(rundown, metadata, index);
+      // updateLoaded recalculates the secondary target and queues a start if the event is now
+      updateLoaded(runtimeState.eventNow ?? undefined);
+      loadGroupFlagAndEnd(rundown, metadata, index);
+      return;
+    }
   }
 
   // event now might have moved so we find the event now id and recalculate the the index again
