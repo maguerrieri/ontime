@@ -16,7 +16,12 @@ const PORT = process.env.PORT ?? '4001';
 const BASE = `http://localhost:${PORT}`;
 
 async function api(path) {
-  const res = await fetch(`${BASE}${path}`);
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`);
+  } catch (cause) {
+    throw new Error(`cannot reach ${BASE} — is the server running? (see SKILL.md)`, { cause });
+  }
   const text = await res.text();
   if (!res.ok) throw new Error(`${path} -> ${res.status}: ${text}`);
   return JSON.parse(text);
@@ -26,17 +31,26 @@ async function smoke() {
   const version = await api('/api/version');
   console.log('version:', version.payload);
   await api('/api/start/index/1');
-  const playing = await api('/api/poll');
-  console.log('playback:', playing.payload.timer.playback, '| event:', playing.payload.eventNow?.title);
-  if (playing.payload.timer.playback !== 'play') throw new Error('expected playback=play after start');
-  await api('/api/pause');
-  await api('/api/stop');
+  try {
+    const playing = await api('/api/poll');
+    console.log('playback:', playing.payload.timer.playback, '| event:', playing.payload.eventNow?.title);
+    if (playing.payload.timer.playback !== 'play') throw new Error('expected playback=play after start');
+    await api('/api/pause');
+  } finally {
+    await api('/api/stop').catch(() => {}); // leave the shared server stopped even on failure
+  }
   const stopped = await api('/api/poll');
   if (stopped.payload.timer.playback !== 'stop') throw new Error('expected playback=stop after stop');
   console.log('smoke OK');
 }
 
+// from apps/client/src/AppRouter.tsx; unknown paths hit a wildcard redirect and still render something
+const KNOWN_VIEWS = ['timer', 'countdown', 'backstage', 'studio', 'timeline', 'info', 'editor', 'cuesheet', 'op'];
+
 async function screenshot(view = 'timer', out = `ontime-${view}.png`) {
+  if (!KNOWN_VIEWS.includes(view)) {
+    console.warn(`warning: '${view}' is not a known view (${KNOWN_VIEWS.join(', ')}); screenshotting anyway`);
+  }
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
