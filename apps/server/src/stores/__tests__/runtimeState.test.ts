@@ -2,7 +2,7 @@ import { type Day, Instant, PlayableEvent, Playback, SupportedEntry, TimerPhase 
 import { MILLIS_PER_HOUR, MILLIS_PER_MINUTE } from 'ontime-utils';
 
 import { makeOntimeEvent, makeOntimeGroup, makeRundown } from '../../api-data/rundown/__mocks__/rundown.mocks.js';
-import { rundownCache } from '../../api-data/rundown/rundown.dao.js';
+import { processRundown, rundownCache } from '../../api-data/rundown/rundown.dao.js';
 import { initRundown } from '../../api-data/rundown/rundown.service.js';
 import { RundownMetadata } from '../../api-data/rundown/rundown.types.js';
 import {
@@ -18,6 +18,7 @@ import {
   start,
   stop,
   update,
+  updateAll,
 } from '../runtimeState.js';
 
 const mockEvent = {
@@ -61,6 +62,7 @@ vi.mock('../../classes/data-provider/DataProvider.js', () => {
       return {
         setCustomFields: vi.fn().mockImplementation((newData) => newData),
         setRundown: vi.fn().mockImplementation((newData) => newData),
+        getAutomation: vi.fn().mockImplementation(() => ({ enabledAutomations: false, triggers: [], automations: {} })),
       };
     }),
   };
@@ -766,6 +768,100 @@ describe('roll mode', () => {
       vi.setSystemTime('jan 1 00:00:03:500');
       result = roll(rundown, metadata);
       expect(result).toStrictEqual({ eventId: '3', didStart: true });
+    });
+  });
+
+  describe('rundown change while waiting to roll', () => {
+    test('reordering events during pending retargets the roll to the new next event', async () => {
+      const mockRundown = makeRundown({
+        entries: {
+          1: {
+            ...mockEvent,
+            id: '1',
+            timeStart: 1 * MILLIS_PER_HOUR, // 01:00
+            timeEnd: 2 * MILLIS_PER_HOUR, // 02:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+          2: {
+            ...mockEvent,
+            id: '2',
+            timeStart: 3 * MILLIS_PER_HOUR, // 03:00
+            timeEnd: 4 * MILLIS_PER_HOUR, // 04:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+        },
+        order: ['1', '2'],
+      });
+
+      await initRundown(mockRundown, {});
+      vi.runAllTimers();
+
+      // start roll at 00:30, event 1 is pending for 01:00
+      vi.setSystemTime('jan 1 00:30');
+      const { rundown, metadata } = rundownCache.get();
+      const result = roll(rundown, metadata);
+      expect(result.eventId).toBe('1');
+      expect(result.didStart).toBe(false);
+      expect(getState().timer.secondaryTimer).toBe(30 * MILLIS_PER_MINUTE);
+
+      // reorder so event 2 is first, and hot-reload
+      const reordered = makeRundown({ entries: mockRundown.entries, order: ['2', '1'] });
+      const processed = processRundown(reordered, {});
+      updateAll({ ...reordered, entries: processed.entries }, processed);
+
+      // the roll should retarget to event 2, now first in the rundown
+      const state = getState();
+      expect(state.eventNow?.id).toBe('2');
+      expect(state.timer.phase).toBe(TimerPhase.Pending);
+      expect(state.timer.secondaryTimer).toBe(2 * MILLIS_PER_HOUR + 30 * MILLIS_PER_MINUTE);
+    });
+
+    test('reordering an event with a window over the clock queues an immediate start', async () => {
+      const mockRundown = makeRundown({
+        entries: {
+          1: {
+            ...mockEvent,
+            id: '1',
+            timeStart: 2 * MILLIS_PER_HOUR, // 02:00
+            timeEnd: 3 * MILLIS_PER_HOUR, // 03:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+          2: {
+            ...mockEvent,
+            id: '2',
+            timeStart: 15 * MILLIS_PER_MINUTE, // 00:15
+            timeEnd: 1 * MILLIS_PER_HOUR, // 01:00
+            duration: 45 * MILLIS_PER_MINUTE,
+            dayOffset: 0 as Day,
+          },
+        },
+        order: ['1', '2'],
+      });
+
+      await initRundown(mockRundown, {});
+      vi.runAllTimers();
+
+      // start roll at 00:30, event 1 is pending for 02:00 (event 2 comes later in order)
+      vi.setSystemTime('jan 1 00:30');
+      const { rundown, metadata } = rundownCache.get();
+      const result = roll(rundown, metadata);
+      expect(result.eventId).toBe('1');
+      expect(result.didStart).toBe(false);
+
+      // reorder so event 2, whose window covers the clock, is first
+      const reordered = makeRundown({ entries: mockRundown.entries, order: ['2', '1'] });
+      const processed = processRundown(reordered, {});
+      updateAll({ ...reordered, entries: processed.entries }, processed);
+
+      // event 2 becomes the roll target with an elapsed secondary timer, queueing a start
+      const state = getState();
+      expect(state.eventNow?.id).toBe('2');
+      expect(state.timer.secondaryTimer).not.toBeNull();
+      expect(state.timer.secondaryTimer!).toBeLessThanOrEqual(0);
+      expect(update().hasSecondaryTimerFinished).toBe(true);
     });
   });
 

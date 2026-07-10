@@ -371,6 +371,7 @@ export function updateLoaded(event?: PlayableEvent): string | undefined {
             runtimeState.eventNow.timeStart,
             offsetClock,
           ) as TimeOfDay;
+          runtimeState.timer.secondaryTimer = runtimeState._timer.secondaryTarget - offsetClock;
         }
       }
     }
@@ -397,8 +398,26 @@ export function updateLoaded(event?: PlayableEvent): string | undefined {
 
 /**
  * Used in situations when we want to hot-reload all events without interrupting timer
+ * if we are in roll mode waiting for an event, the roll target is re-selected against the clock
  */
 export function updateAll(rundown: Rundown, metadata: RundownMetadata) {
+  /**
+   * if we are waiting to roll, the change may mean a different event should be the roll target
+   * so we re-run the roll selection against the clock instead of keeping the pinned event
+   * a running roll timer is deliberately left alone - we never interrupt a live timer
+   */
+  if (runtimeState.timer.playback === Playback.Roll && runtimeState._timer.secondaryTarget !== null) {
+    const offsetClock = runtimeState.clock - runtimeState.offset.absolute;
+    const { index } = loadRoll(rundown, metadata, offsetClock);
+
+    loadNow(rundown, metadata, index ?? undefined);
+    loadNext(rundown, metadata, index ?? undefined);
+    // updateLoaded recalculates the secondary target and queues a start if the event is now
+    updateLoaded(runtimeState.eventNow ?? undefined);
+    loadGroupFlagAndEnd(rundown, metadata, index ?? -1);
+    return;
+  }
+
   // event now might have moved so we find the event now id and recalculate the the index again
   const eventNowIndex = metadata.timedEventOrder.findIndex((id) => id === runtimeState.eventNow?.id);
 
