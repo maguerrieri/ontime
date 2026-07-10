@@ -62,15 +62,13 @@ vi.mock('../../classes/data-provider/DataProvider.js', () => {
       return {
         setCustomFields: vi.fn().mockImplementation((newData) => newData),
         setRundown: vi.fn().mockImplementation((newData) => newData),
-        getAutomation: vi
-          .fn()
-          .mockImplementation(() => ({
-            enabledAutomations: false,
-            enabledOscIn: false,
-            oscPortIn: 8888,
-            triggers: [],
-            automations: {},
-          })),
+        getAutomation: vi.fn().mockImplementation(() => ({
+          enabledAutomations: false,
+          enabledOscIn: false,
+          oscPortIn: 8888,
+          triggers: [],
+          automations: {},
+        })),
       };
     }),
   };
