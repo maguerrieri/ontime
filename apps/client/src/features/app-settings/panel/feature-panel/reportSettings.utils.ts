@@ -5,8 +5,8 @@ import { makeCSVFromArrayOfArrays } from '../../../../common/utils/csv';
 import { formatTime } from '../../../../common/utils/time';
 
 /**
- * Whether the loaded event's timer is actively counting — playback is active
- * and Roll is not sitting in the waiting-to-roll Pending phase.
+ * Whether the loaded event's timer is in an active playback state (Play, Pause
+ * or Roll) and not sitting in the waiting-to-roll Pending phase.
  * Gates the live projected end in the report panel.
  */
 export function isTimerActivelyRunning(playback: Playback, phase: TimerPhase): boolean {
