@@ -33,7 +33,6 @@ Start the server with a pinned port and throwaway data dir — otherwise it read
 ```bash
 mkdir -p /tmp/ontime-data
 (cd apps/server && ONTIME_DATA=/tmp/ontime-data PORT=4001 pnpm dev) &   # background terminal
-SERVER_PID=$!   # keep this to stop the server later
 # ready when the log prints "Ontime is listening on port 4001"
 curl -s localhost:4001/api/version   # {"payload":"<repo version>"}
 ```
@@ -54,7 +53,7 @@ Useful API endpoints (all GET, JSON `{payload: ...}`):
 - `/api/start/index/1` (1-based), `/api/start/next`, `/api/pause`, `/api/stop`
 - `/data/settings`, `/data/db` (project data)
 
-Stop cleanly: Ctrl-C in the server's terminal, or `kill $SERVER_PID` if you backgrounded it as above (avoid broad patterns like `pkill -f "tsx watch"` — they can hit unrelated processes).
+Stop cleanly: Ctrl-C in the server's terminal, or if backgrounded, kill the actual listener by port — `lsof -ti tcp:4001 | xargs kill` — since the subshell's `$!` is not the server process (pnpm → cross-env → tsx). Avoid broad patterns like `pkill -f "tsx watch"`; they can hit unrelated processes.
 
 ## Run (human path)
 
