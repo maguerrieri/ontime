@@ -62,7 +62,15 @@ vi.mock('../../classes/data-provider/DataProvider.js', () => {
       return {
         setCustomFields: vi.fn().mockImplementation((newData) => newData),
         setRundown: vi.fn().mockImplementation((newData) => newData),
-        getAutomation: vi.fn().mockImplementation(() => ({ enabledAutomations: false, triggers: [], automations: {} })),
+        getAutomation: vi
+          .fn()
+          .mockImplementation(() => ({
+            enabledAutomations: false,
+            enabledOscIn: false,
+            oscPortIn: 8888,
+            triggers: [],
+            automations: {},
+          })),
       };
     }),
   };
@@ -862,6 +870,58 @@ describe('roll mode', () => {
       expect(state.timer.secondaryTimer).not.toBeNull();
       expect(state.timer.secondaryTimer!).toBeLessThanOrEqual(0);
       expect(update().hasSecondaryTimerFinished).toBe(true);
+    });
+  });
+
+  describe('rundown change while rolling a live event', () => {
+    test('reordering events while a roll timer runs does not interrupt it', async () => {
+      const mockRundown = makeRundown({
+        entries: {
+          1: {
+            ...mockEvent,
+            id: '1',
+            timeStart: 1 * MILLIS_PER_HOUR, // 01:00
+            timeEnd: 2 * MILLIS_PER_HOUR, // 02:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+          2: {
+            ...mockEvent,
+            id: '2',
+            timeStart: 2 * MILLIS_PER_HOUR, // 02:00
+            timeEnd: 3 * MILLIS_PER_HOUR, // 03:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+        },
+        order: ['1', '2'],
+      });
+
+      await initRundown(mockRundown, {});
+      vi.runAllTimers();
+
+      // roll at 00:30 -> pending for event 1, this leaves a secondary target behind
+      vi.setSystemTime('jan 1 00:30');
+      const { rundown, metadata } = rundownCache.get();
+      let result = roll(rundown, metadata);
+      expect(result.didStart).toBe(false);
+
+      // event 1 starts -> live roll timer
+      vi.setSystemTime('jan 1 01:10');
+      result = roll(rundown, metadata);
+      expect(result).toStrictEqual({ eventId: '1', didStart: true });
+      const startedAt = getState().timer.startedAt;
+
+      // reorder while live: the running timer must be left alone
+      const reordered = makeRundown({ entries: mockRundown.entries, order: ['2', '1'] });
+      const processed = processRundown(reordered, {});
+      updateAll({ ...reordered, entries: processed.entries }, processed);
+
+      const state = getState();
+      expect(state.eventNow?.id).toBe('1');
+      expect(state.timer.startedAt).toBe(startedAt);
+      expect(state.timer.secondaryTimer).toBeNull();
+      expect(update().hasSecondaryTimerFinished).toBe(false);
     });
   });
 
