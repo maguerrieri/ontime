@@ -67,7 +67,7 @@
   flex-wrap: wrap;
   align-items: center;
   column-gap: $section-spacing;
-  row-gap: 0.25rem;
+  row-gap: $element-inner-spacing;
 }
 
 .start,
@@ -98,5 +98,4 @@
   margin-left: auto;
   padding: 0.25rem;
   min-width: unset;
-  align-self: center;
 }
