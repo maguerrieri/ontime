@@ -24,6 +24,12 @@ pnpm i        # postinstall generates src/ONTIME_VERSION.js in client and server
 pnpm build    # turbo build of all workspaces; populates apps/client/build (served by the server)
 ```
 
+On a fresh machine, install the Playwright browser too (needed by `driver.mjs ss` and `pnpm e2e`; CI runs the same with `--with-deps`):
+
+```bash
+pnpm playwright install chromium   # add --with-deps on bare Linux for system libs
+```
+
 `pnpm build` must run at least once before the server is useful — the server serves the **built** UI from `apps/client/build` even in dev mode.
 
 ## Run (agent path)
