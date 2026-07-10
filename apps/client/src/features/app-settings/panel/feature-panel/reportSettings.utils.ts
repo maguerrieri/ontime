@@ -1,7 +1,29 @@
-import { EntryId, MaybeNumber, OntimeReport, RundownEntries, isOntimeEvent } from 'ontime-types';
+import { EntryId, MaybeNumber, OntimeReport, Playback, RundownEntries, TimerPhase, isOntimeEvent } from 'ontime-types';
+import { isPlaybackActive } from 'ontime-utils';
 
 import { makeCSVFromArrayOfArrays } from '../../../../common/utils/csv';
 import { formatTime } from '../../../../common/utils/time';
+
+/**
+ * Whether the loaded event's timer is actively counting — playback is active
+ * and Roll is not sitting in the waiting-to-roll Pending phase.
+ * Gates the live projected end in the report panel.
+ */
+export function isTimerActivelyRunning(playback: Playback, phase: TimerPhase): boolean {
+  return isPlaybackActive(playback) && phase !== TimerPhase.Pending;
+}
+
+/**
+ * Overlays the running event's live expected finish onto its row.
+ * Cheap enough to run per timer tick over a memoized static report.
+ */
+export function overlayProjectedEnd(
+  report: CombinedReport[],
+  running: { id: EntryId; expectedFinish: MaybeNumber } | null,
+): CombinedReport[] {
+  if (running === null) return report;
+  return report.map((entry) => (entry.id === running.id ? { ...entry, projectedEnd: running.expectedFinish } : entry));
+}
 
 export type CombinedReport = {
   id: EntryId;
@@ -37,7 +59,7 @@ export function getCombinedReport(
     const entry = rundown[id];
     if (!entry || !isOntimeEvent(entry)) continue;
 
-    const projectedEnd = running?.id === id ? running.expectedFinish : null;
+    const projectedEnd = null;
 
     if (!(id in report)) {
       combinedReport.push({
@@ -69,7 +91,7 @@ export function getCombinedReport(
     index++;
   }
 
-  return combinedReport;
+  return overlayProjectedEnd(combinedReport, running);
 }
 
 const csvHeader = [
