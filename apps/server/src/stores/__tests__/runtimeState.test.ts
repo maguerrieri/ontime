@@ -1072,6 +1072,54 @@ describe('roll mode', () => {
       expect(state.timer.secondaryTimer).toBe(20 * MILLIS_PER_MINUTE);
       expect(update().hasSecondaryTimerFinished).toBe(false);
     });
+
+    test('added time on the abandoned event does not shift the new roll target', async () => {
+      const mockRundown = makeRundown({
+        entries: {
+          1: {
+            ...mockEvent,
+            id: '1',
+            timeStart: 1 * MILLIS_PER_HOUR, // 01:00
+            timeEnd: 2 * MILLIS_PER_HOUR, // 02:00
+            duration: 1 * MILLIS_PER_HOUR,
+            dayOffset: 0 as Day,
+          },
+        },
+        order: ['1'],
+      });
+
+      await initRundown(mockRundown, {});
+      vi.runAllTimers();
+
+      // event 1 is live in roll at 01:10, the operator adds 5 minutes
+      vi.setSystemTime('jan 1 01:10');
+      const { rundown, metadata } = rundownCache.get();
+      const result = roll(rundown, metadata);
+      expect(result).toStrictEqual({ eventId: '1', didStart: true });
+      addTime(5 * MILLIS_PER_MINUTE);
+      expect(getState().offset.absolute).toBe(5 * MILLIS_PER_MINUTE);
+
+      // the live event is pushed 2 minutes into the future, abandoning it
+      const reflowed = makeRundown({
+        entries: {
+          1: {
+            ...mockRundown.entries[1],
+            timeStart: 1 * MILLIS_PER_HOUR + 12 * MILLIS_PER_MINUTE,
+            timeEnd: 2 * MILLIS_PER_HOUR + 12 * MILLIS_PER_MINUTE,
+          },
+        },
+        order: ['1'],
+      });
+      const processed = processRundown(reflowed, {});
+      updateAll({ ...reflowed, entries: processed.entries }, processed);
+
+      // the abandoned event's added time no longer shifts the schedule:
+      // the countdown targets the new start against the actual clock, not clock + 5m
+      const state = getState();
+      expect(state.offset.absolute).toBe(0);
+      expect(state.timer.phase).toBe(TimerPhase.Pending);
+      expect(state.timer.secondaryTimer).toBe(2 * MILLIS_PER_MINUTE);
+    });
   });
 
   describe('roll takeover', () => {

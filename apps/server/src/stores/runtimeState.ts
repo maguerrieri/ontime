@@ -425,6 +425,7 @@ export function updateAll(rundown: Rundown, metadata: RundownMetadata) {
     const shouldRetargetLive = event !== null && (!liveEventIsStillNow || selectionIsNow);
 
     if (isWaitingToRoll || shouldRetargetLive) {
+      let targetIndex = index;
       if (!isWaitingToRoll) {
         // drop the live timer back to a pending roll targeting the new selection
         runtimeState.timer.phase = TimerPhase.Pending;
@@ -436,12 +437,22 @@ export function updateAll(rundown: Rundown, metadata: RundownMetadata) {
         runtimeState._timer.forceFinish = null;
         // placeholder so the timer reads as waiting to roll, recalculated in updateLoaded
         runtimeState.timer.secondaryTimer = 0;
+
+        /**
+         * the abandoned event no longer contributes to the offset
+         * (added time or a late start would otherwise keep shifting the schedule)
+         * we recompute it and re-select the roll target against the corrected clock
+         */
+        const { absolute, relative } = getRuntimeOffset(runtimeState);
+        runtimeState.offset.absolute = absolute;
+        runtimeState.offset.relative = relative;
+        ({ index: targetIndex } = loadRoll(rundown, metadata, runtimeState.clock - absolute));
       }
-      loadNow(rundown, metadata, index);
-      loadNext(rundown, metadata, index);
+      loadNow(rundown, metadata, targetIndex);
+      loadNext(rundown, metadata, targetIndex);
       // updateLoaded recalculates the secondary target and queues a start if the event is now
       updateLoaded(runtimeState.eventNow ?? undefined);
-      loadGroupFlagAndEnd(rundown, metadata, index);
+      loadGroupFlagAndEnd(rundown, metadata, targetIndex);
       return;
     }
   }
