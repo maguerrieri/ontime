@@ -79,7 +79,7 @@ pnpm e2e    # builds ontime-ui, then Playwright vs the server on :4001 (~60 test
 - **`pnpm e2e` reuses an existing server on 4001** (`reuseExistingServer: true` in `playwright.config.ts`). If your own dev server is already on 4001, the e2e suite runs against _it_ — your data dir, your state. Stop your server first for a clean run.
 - **Port precedence:** `PORT` env > stored app state > default 4001 (`apps/server/src/classes/port-manager/PortManager.ts`). Without `ONTIME_DATA`+`PORT`, you inherit the local operator's install state.
 - **UI routes 301 to trailing slash** (`/timer` → `/timer/`) — only visible when curling raw (`curl -L` or use the trailing slash); browsers and Playwright follow it transparently, so e2e specs use `/timer` unchanged.
-- **Editor shows a "Welcome to Ontime" modal** on first load of a fresh data dir — screenshots of `/editor` will have it in front. Other views (timer, clock…) are unaffected.
+- **Editor shows a "Welcome to Ontime" modal** on first load of a fresh data dir — screenshots of `/editor` will have it in front. Other views (timer, backstage…) are unaffected.
 - **Node 25 crashes the server on startup**: `buffer-equal-constant-time` touches `SlowBuffer.prototype`, removed in newer Node — `TypeError: Cannot read properties of undefined (reading 'prototype')`. Stay on Node 22 (repo `devEngines` pins 22.x).
 - **The server restores prior playback state** from `ontime.restore` in the data dir — it can come back mid-Roll on restart (observed). If a smoke test needs a known state, hit `/api/stop` first or use a fresh `ONTIME_DATA`.
 - **Multiple worktrees collide on ports 3000/4001** — a stale dev stack from another worktree can hold both. Check `lsof -ti tcp:4001` before assuming your server is the one answering.

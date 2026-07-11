@@ -5,7 +5,7 @@
 //
 // Commands:
 //   smoke                  - API round-trip: version, start event 1, poll, pause, stop
-//   ss <view> [out.png]    - screenshot a UI view (timer, editor, clock, backstage, ...)
+//   ss <view> [out.png]    - screenshot a UI view (see KNOWN_VIEWS below)
 //   poll                   - dump current runtime state
 //
 // PORT env selects the server port (default 4001).
