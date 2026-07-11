@@ -61,9 +61,11 @@ Useful API endpoints (all GET, JSON `{payload: ...}`):
 
 Stop cleanly: Ctrl-C in the server's terminal, or if backgrounded, kill the actual listener by port — `lsof -ti tcp:4001 | xargs kill` — since the subshell's `$!` is not the server process (pnpm → cross-env → tsx). Avoid broad patterns like `pkill -f "tsx watch"`; they can hit unrelated processes.
 
-## Run (human path)
+## Run (human path / client dev)
 
 `pnpm dev` at repo root starts server **and** the vite client dev server (HMR, port 3000). Use the vite one for iterating on client code; the agent path above is enough for API/server work and screenshots of production-ish UI.
+
+The vite dev server proxies `/api`, `/data`, `/ws`, `/login`, `/user` to a **hardcoded** `http://localhost:4001` (`apps/client/vite.config.js`) — so the server must actually be on 4001 (set `PORT=4001`; a stored custom port silently breaks the proxy). Verify through the proxy, not just direct: `curl localhost:3000/data/settings` → 200.
 
 ## Test
 
@@ -78,6 +80,10 @@ pnpm e2e    # builds ontime-ui, then Playwright vs the server on :4001 (~60 test
 - **Port precedence:** `PORT` env > stored app state > default 4001 (`apps/server/src/classes/port-manager/PortManager.ts`). Without `ONTIME_DATA`+`PORT`, you inherit the local operator's install state.
 - **UI routes 301 to trailing slash** (`/timer` → `/timer/`) — only visible when curling raw (`curl -L` or use the trailing slash); browsers and Playwright follow it transparently, so e2e specs use `/timer` unchanged.
 - **Editor shows a "Welcome to Ontime" modal** on first load of a fresh data dir — screenshots of `/editor` will have it in front. Other views (timer, clock…) are unaffected.
+- **Node 25 crashes the server on startup**: `buffer-equal-constant-time` touches `SlowBuffer.prototype`, removed in newer Node — `TypeError: Cannot read properties of undefined (reading 'prototype')`. Stay on Node 22 (repo `devEngines` pins 22.x).
+- **The server restores prior playback state** from `ontime.restore` in the data dir — it can come back mid-Roll on restart (observed). If a smoke test needs a known state, hit `/api/stop` first or use a fresh `ONTIME_DATA`.
+- **Multiple worktrees collide on ports 3000/4001** — a stale dev stack from another worktree can hold both. Check `lsof -ti tcp:4001` before assuming your server is the one answering.
+- **Agent-run background shells can get reaped between turns**, killing the dev stack. For a stack that must survive, use `nohup … & disown` with logs redirected to a stable path instead of a plain `&`.
 - **`DEVELOPMENT.md` is stale:** it references `pnpm build:local` and `pnpm dev:server`, which don't exist in the root `package.json`. Use `pnpm build` and `(cd apps/server && pnpm dev)`.
 
 ## Troubleshooting
