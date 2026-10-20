@@ -1,6 +1,16 @@
 ARG NODE_VERSION=22.22.2
 FROM node:${NODE_VERSION}-alpine
 
+# Trust a pinned CA bundle instead of the one built into Node, which still includes the compromised eMudhra CAs
+# Alpine's fixed ca-certificates-bundle is not yet built for every platform we target, so use curl's extract
+# OpenSSL also reads its hash directory when SSL_CERT_FILE is set, so point SSL_CERT_DIR at nothing
+# Drop this once the Node base image ships the fix (#17)
+ADD --chmod=644 --checksum=sha256:796f1389bfea13c0ed78f663b765baaff54a508e5483786bd6ece73c5e3e3cbe \
+    https://curl.se/ca/cacert-2026-10-20.pem /etc/ssl/pinned/cacert-2026-10-20.pem
+ENV SSL_CERT_FILE=/etc/ssl/pinned/cacert-2026-10-20.pem
+ENV SSL_CERT_DIR=/nonexistent
+ENV NODE_OPTIONS="--use-openssl-ca${NODE_OPTIONS:+ $NODE_OPTIONS}"
+
 # Set environment variables
 # Environment Variable to signal that we are running production
 ENV NODE_ENV=docker
@@ -22,7 +32,8 @@ COPY apps/server/src/html/ ./html/
 # Export default ports
 EXPOSE 4001/tcp 8888/udp 9999/udp
 
-CMD ["node", "server/docker.cjs"]
+# Repeat --use-openssl-ca so a NODE_OPTIONS set at runtime can't drop it
+CMD ["node", "--use-openssl-ca", "server/docker.cjs"]
 
 # Build and run commands
 # pnpm build:docker
